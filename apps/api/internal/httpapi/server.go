@@ -56,7 +56,8 @@ type apiError struct {
 
 func NewHandler(logger *slog.Logger, deps Dependencies, registry *prometheus.Registry) http.Handler {
 	router := chi.NewRouter()
-	router.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer)
+	metrics := newHTTPMetrics(registry)
+	router.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer, traceCorrelation, metrics.middleware)
 	router.Use(requestLog(logger))
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, http.StatusNotFound, "not_found", "resource not found")
@@ -111,7 +112,7 @@ func requestLog(logger *slog.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 			next.ServeHTTP(w, r)
-			logger.InfoContext(r.Context(), "http request", "request_id", middleware.GetReqID(r.Context()), "method", r.Method, "path", r.URL.Path, "duration_ms", time.Since(start).Milliseconds())
+			logger.InfoContext(r.Context(), "http request", "request_id", middleware.GetReqID(r.Context()), "trace_id", requestTraceID(r.Context()), "method", r.Method, "path", r.URL.Path, "duration_ms", time.Since(start).Milliseconds())
 		})
 	}
 }

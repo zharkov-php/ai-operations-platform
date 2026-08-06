@@ -62,3 +62,33 @@ func TestErrorEnvelopeIncludesRequestID(t *testing.T) {
 		t.Fatalf("unexpected error envelope: %s", body)
 	}
 }
+
+func TestMetricsUseBoundedRouteLabels(t *testing.T) {
+	registry := prometheus.NewRegistry()
+	api := NewHandler(slog.New(slog.NewJSONHandler(io.Discard, nil)), Dependencies{Database: checkFunc(func(context.Context) error { return nil }), Redis: checkFunc(func(context.Context) error { return nil })}, registry)
+	api.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/unknown/12345", nil))
+	families, err := registry.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, family := range families {
+		for _, metric := range family.Metric {
+			for _, label := range metric.Label {
+				if label.GetName() == "route" && label.GetValue() != "unmatched" {
+					t.Fatalf("unbounded route label %q", label.GetValue())
+				}
+			}
+		}
+	}
+}
+
+func TestTraceparentCorrelation(t *testing.T) {
+	var captured string
+	next := traceCorrelation(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { captured = requestTraceID(r.Context()) }))
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	request.Header.Set("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01")
+	next.ServeHTTP(httptest.NewRecorder(), request)
+	if captured != "4bf92f3577b34da6a3ce929d0e0e4736" {
+		t.Fatalf("trace id=%q", captured)
+	}
+}

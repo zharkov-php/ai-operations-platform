@@ -29,7 +29,14 @@ import (
 )
 
 func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
-	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	poolConfig.MaxConns = 20
+	poolConfig.MinConns = 2
+	poolConfig.MaxConnLifetime = 30 * time.Minute
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return err
 	}
@@ -38,6 +45,9 @@ func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	redisOptions.DialTimeout = 3 * time.Second
+	redisOptions.ReadTimeout = 2 * time.Second
+	redisOptions.WriteTimeout = 2 * time.Second
 	redisClient := redis.NewClient(redisOptions)
 	defer redisClient.Close()
 
