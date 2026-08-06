@@ -4,7 +4,7 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–4 are implemented: the architecture, monorepo, Go service foundation, organization-scoped authentication, projects, and workloads exist. Project/workload APIs support validation, bounded pagination, filters, partial updates, role permissions, tenant isolation, unique slugs, decimal budgets, and audit entries. Ingestion, analytics, recommendations, and complete demo data are not implemented yet.
+Phases 0–5 are implemented: the architecture, monorepo, service foundation, authentication, projects/workloads, and versioned model catalog exist. Pricing periods reject overlap at the database boundary, retain effective dates and source notes, label illustrative data, and use decimal-safe cost calculations. Ingestion, analytics, recommendations, and complete demo data are not implemented yet.
 
 ## Planned product surfaces
 
