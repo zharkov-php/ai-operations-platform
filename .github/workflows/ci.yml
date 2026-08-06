@@ -1,0 +1,90 @@
+name: CI
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          {
+            POSTGRES_DB: ai_operations,
+            POSTGRES_USER: ai_operations,
+            POSTGRES_PASSWORD: integration-only,
+          }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ai_operations" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgres://ai_operations:integration-only@localhost:5432/ai_operations?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          {
+            go-version-file: apps/api/go.mod,
+            cache-dependency-path: apps/api/go.sum,
+          }
+      - name: Formatting
+        run: test -z "$(gofmt -l $(find apps/api -name '*.go'))"
+      - name: Vet
+        run: cd apps/api && go vet ./...
+      - uses: golangci/golangci-lint-action@v7
+        with: { version: v2.1.6, working-directory: apps/api }
+      - name: Migrations
+        run: cd apps/api && go run ./cmd/migrate
+      - name: Unit and integration tests
+        run: make test-api test-integration
+      - name: Build API
+        run: make build-api
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test
+      - run: make check-api-client
+      - run: npm run typecheck --workspace @ai-operations/api-client
+      - run: npm run build --workspace web
+      - run: npm run typecheck --workspace mobile
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: make test-e2e
+      - run: npm run test:e2e --workspace mobile
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config
+      - run: docker compose build
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - uses: actions/setup-go@v5
+        with: { go-version-file: apps/api/go.mod }
+      - run: cd apps/api && go list -m -json all >/dev/null
+      - run: cd apps/api && go run github.com/google/go-licenses@v1.6.0 check ./...

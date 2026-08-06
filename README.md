@@ -4,7 +4,7 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–19 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The private platform supports audited review, sanitized evaluations, local-model economics, guarded experiments, budget governance, and deduplicated in-app notifications. The API now includes bounded-cardinality HTTP telemetry, W3C trace correlation, dependency timeouts, and documented operational response. The Expo companion provides secure mobile authentication, operational summaries, notifications, alerts, recommendation review, experiment controls, and explicit permission and offline states.
+Phases 0–20 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The private platform supports audited review, sanitized evaluations, local-model economics, guarded experiments, budget governance, and deduplicated in-app notifications. The API includes bounded-cardinality telemetry, W3C trace correlation, dependency timeouts, and documented operational response. GitHub Actions validates API, web, mobile, contracts, browser E2E, containers, dependencies, and secrets. The Expo companion provides secure mobile authentication, operational summaries, notifications, alerts, recommendation review, experiment controls, and explicit permission and offline states.
 
 ## Planned product surfaces
 
