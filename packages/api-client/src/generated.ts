@@ -388,6 +388,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listExperiments"];
+        put?: never;
+        post: operations["createExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getExperiment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pauseExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rollbackExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verifyExperiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{experimentID}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recordExperimentMetrics"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -719,6 +863,70 @@ export interface components {
             currency: string;
             methodology: string;
         };
+        ExperimentGuardrails: {
+            minimum_quality_score: string;
+            maximum_latency_ms: string;
+            maximum_error_rate: string;
+            maximum_cost_per_call: string;
+        };
+        ExperimentMetrics: {
+            quality_score: string;
+            average_latency_ms: string;
+            error_rate: string;
+            cost_per_call: string;
+            control_total_cost: string;
+            candidate_total_cost: string;
+        };
+        CreateExperiment: {
+            /** Format: uuid */
+            workload_id: string;
+            /** Format: uuid */
+            recommendation_id: string;
+            traffic_percentage: string;
+            currency: string;
+            control_execution: {
+                [key: string]: unknown;
+            };
+            candidate_execution: {
+                [key: string]: unknown;
+            };
+            guardrails: components["schemas"]["ExperimentGuardrails"];
+        };
+        Experiment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workload_id: string;
+            /** Format: uuid */
+            recommendation_id: string;
+            /** @enum {string} */
+            status: "draft" | "approved" | "running" | "paused" | "rolled_back" | "completed" | "verified";
+            currency: string;
+            rollback_reason: string;
+            control_execution: {
+                [key: string]: unknown;
+            };
+            candidate_execution: {
+                [key: string]: unknown;
+            };
+            results: {
+                [key: string]: unknown;
+            };
+            traffic_percentage: string | null;
+            verified_savings?: string | null;
+            guardrails: components["schemas"]["ExperimentGuardrails"];
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        } & {
+            [key: string]: unknown;
+        };
     };
     responses: {
         /** @description API error */
@@ -738,6 +946,7 @@ export interface components {
         To: string;
         Timezone: string;
         ProjectID: string;
+        ExperimentID: string;
     };
     requestBodies: never;
     headers: never;
@@ -1367,6 +1576,251 @@ export interface operations {
             };
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    listExperiments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Experiments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Experiment"][];
+                    };
+                };
+            };
+        };
+    };
+    createExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExperiment"];
+            };
+        };
+        responses: {
+            /** @description Draft experiment */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Experiment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    approveExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Approved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    startExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started or resumed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    pauseExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paused */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    rollbackExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Rolled back */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    completeExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentMetrics"];
+            };
+        };
+        responses: {
+            /** @description Completed or automatically rolled back */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    verifyExperiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified savings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    recordExperimentMetrics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentID: components["parameters"]["ExperimentID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentMetrics"];
+            };
+        };
+        responses: {
+            /** @description Metrics recorded or automatic rollback applied */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
         };
     };
 }

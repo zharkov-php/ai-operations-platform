@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 
 const links = [
   ["Overview", "/dashboard"], ["Projects", "/dashboard/projects"], ["Workloads", "/dashboard/workloads"],
-  ["Calls", "/dashboard/calls"], ["Recommendations", "/dashboard/recommendations"], ["Evaluations", "/dashboard/evaluations"], ["Local models", "/dashboard/local-models"],
+  ["Calls", "/dashboard/calls"], ["Recommendations", "/dashboard/recommendations"], ["Evaluations", "/dashboard/evaluations"], ["Local models", "/dashboard/local-models"], ["Experiments", "/dashboard/experiments"],
 ] as const;
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {

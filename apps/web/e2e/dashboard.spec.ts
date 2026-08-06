@@ -6,6 +6,7 @@ const workloadID = "22222222-2222-4222-8222-222222222222";
 const recommendationID = "33333333-3333-4333-8333-333333333333";
 const datasetID = "99999999-9999-4999-8999-999999999999";
 const localModelID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const experimentID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 const now = "2026-08-06T10:00:00Z";
 
 const project = { id: projectID, organization_id: "44444444-4444-4444-8444-444444444444", name: "Demo Operations", slug: "demo-operations", environment: "production", monthly_budget: "2000", currency: "USD", status: "active", created_at: now, updated_at: now };
@@ -18,6 +19,7 @@ const evaluationCases = [
 ];
 const dataset = { id: datasetID, workload_id: workloadID, name: "Ticket ground truth", description: "Sanitized cases", source: "sanitized production samples", privacy_classification: "internal", case_count: 2, cases: evaluationCases, runs: [] as Array<Record<string, unknown>>, created_at: now, updated_at: now };
 const localModel = { id: localModelID, organization_id: project.organization_id, hardware_name: "Illustrative GPU workstation", purchase_cost: "3600.000000000000", useful_lifetime_months: 36, monthly_electricity: "40.000000000000", monthly_maintenance: "60.000000000000", available_memory_gb: "48.0000", estimated_requests_per_second: "2.000000", utilization: "0.250000", supported_model: "illustrative-local-8b", context_limit: 32768, currency: "USD", benchmark_source: "User estimate; not measured", created_at: now, updated_at: now };
+const experiment = { id: experimentID, workload_id: workloadID, recommendation_id: recommendationID, status: "running", currency: "USD", rollback_reason: "", control_execution: { model: "northstar-frontier" }, candidate_execution: { model: "northstar-compact" }, results: {}, traffic_percentage: "10.00", verified_savings: null, guardrails: { minimum_quality_score: "0.90", maximum_latency_ms: "500", maximum_error_rate: "0.05", maximum_cost_per_call: "0.02" }, started_at: now, completed_at: null, version: 3, created_at: now, updated_at: now };
 
 async function authenticate(page: Page) {
   await page.context().addCookies([{ name: "access_token", value: "e2e-session", url: "http://127.0.0.1:3100", httpOnly: true, sameSite: "Lax" }]);
@@ -25,6 +27,7 @@ async function authenticate(page: Page) {
 
 async function mockAPI(page: Page, overrides: Record<string, { status?: number; body: unknown }> = {}) {
   const currentRecommendation = { ...recommendation };
+  const currentExperiment = { ...experiment, results: {} as Record<string, unknown> };
   const history: Array<Record<string, unknown>> = [];
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url());
@@ -67,6 +70,9 @@ async function mockAPI(page: Page, overrides: Record<string, { status?: number; 
     }
     else if (url.pathname === "/api/v1/local-model-configurations") body = { items: [localModel] };
     else if (url.pathname === `/api/v1/local-model-configurations/${localModelID}/compare`) body = { supported: true, constraints: [], monthly_capacity: "1296000", hardware_amortization: "100.000000000000", local_monthly_cost: "200.000000000000", hosted_monthly_cost: "1000.000000000000", local_cost_per_request: "0.002000000000", estimated_monthly_savings: "800.000000000000", estimated_break_even_months: "4.0000", currency: "USD", methodology: "30-day capacity; straight-line hardware amortization" };
+    else if (url.pathname === "/api/v1/experiments") body = { items: [currentExperiment] };
+    else if (url.pathname === `/api/v1/experiments/${experimentID}/metrics`) { currentExperiment.status = "rolled_back"; currentExperiment.rollback_reason = "automatic guardrail violation"; currentExperiment.version++; currentExperiment.results = { guardrail_violations: ["quality_below_minimum"] }; body = currentExperiment; }
+    else if (url.pathname === `/api/v1/experiments/${experimentID}`) body = currentExperiment;
     else return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { code: "not_found", message: "not found", request_id: "e2e" } }) });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   });
@@ -190,4 +196,14 @@ test("local model economics compares capacity, amortization, and break-even", as
   await expect(page.getByText("4.0000")).toBeVisible();
   await expect(page.getByLabel("Hosted versus local monthly cost chart")).toBeVisible();
   await expect(page.getByText(/not a benchmark/i)).toBeVisible();
+});
+
+test("experiment guardrail violation automatically rolls back candidate traffic", async ({ page }) => {
+  await authenticate(page); await mockAPI(page); await page.goto(`/dashboard/experiments/${experimentID}`);
+  await expect(page.getByText("running · 10.00% traffic")).toBeVisible();
+  await page.getByRole("button", { name: "Simulate guardrail violation" }).click();
+  await expect(page.getByText("rolled_back · 10.00% traffic")).toBeVisible();
+  await expect(page.getByText("automatic guardrail violation")).toBeVisible();
+  await expect(page.getByText(/quality_below_minimum/)).toBeVisible();
+  await expect(page.getByText(/Only a verified experiment result/)).toBeVisible();
 });
