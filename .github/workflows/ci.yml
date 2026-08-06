@@ -37,7 +37,7 @@ jobs:
         run: test -z "$(gofmt -l $(find apps/api -name '*.go'))"
       - name: Vet
         run: cd apps/api && go vet ./...
-      - uses: golangci/golangci-lint-action@v7
+      - uses: golangci/golangci-lint-action@v9
         with: { version: v2.1.6, working-directory: apps/api }
       - name: Migrations
         run: cd apps/api && go run ./cmd/migrate
