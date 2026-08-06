@@ -15,6 +15,7 @@ import (
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/analytics"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/apikey"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/auth"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/evaluation"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/ingestion"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/portfolio"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/pricing"
@@ -33,6 +34,7 @@ type Dependencies struct {
 	RateLimiter     *redis.Client
 	Analytics       *analytics.Store
 	Recommendations *recommendation.Store
+	Evaluations     *evaluation.Store
 }
 
 type errorBody struct {
@@ -66,6 +68,7 @@ func NewHandler(logger *slog.Logger, deps Dependencies, registry *prometheus.Reg
 	registerIngestionRoutes(router, deps.Auth, deps.APIKeys, deps.Ingestion, deps.RateLimiter)
 	registerAnalyticsRoutes(router, deps.Auth, deps.Analytics)
 	registerRecommendationRoutes(router, deps.Auth, deps.Recommendations)
+	registerEvaluationRoutes(router, deps.Auth, deps.Evaluations)
 	return http.MaxBytesHandler(router, 1<<20)
 }
 

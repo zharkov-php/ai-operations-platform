@@ -292,6 +292,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/evaluation-datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEvaluationDatasets"];
+        put?: never;
+        post: operations["createEvaluationDataset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evaluation-datasets/{datasetID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEvaluationDataset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evaluation-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createEvaluationRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evaluation-runs/{runID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEvaluationRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -491,6 +555,94 @@ export interface components {
             };
             /** Format: date-time */
             created_at: string;
+        };
+        EvaluationRule: {
+            /** @enum {string} */
+            type: "exact_match" | "classification_match" | "json_schema" | "required_fields";
+            field?: string;
+            fields?: string[];
+            required?: string[];
+            types?: {
+                [key: string]: "string" | "number" | "boolean" | "array" | "object" | "null";
+            };
+        };
+        EvaluationCase: {
+            /** Format: uuid */
+            id?: string;
+            sanitized_input: unknown;
+            expected_output: unknown;
+            validation_rules: components["schemas"]["EvaluationRule"][];
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        EvaluationRun: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            dataset_id: string;
+            candidate_execution: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed";
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
+            total_cases: number;
+            passed_cases: number;
+            failed_cases: number;
+            average_latency_ms: string;
+            estimated_cost: string;
+            currency: string;
+            results: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
+        } & {
+            [key: string]: unknown;
+        };
+        EvaluationDataset: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workload_id: string;
+            name: string;
+            description: string;
+            source: string;
+            privacy_classification: string;
+            case_count: number;
+            cases?: components["schemas"]["EvaluationCase"][];
+            runs?: components["schemas"]["EvaluationRun"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateEvaluationDataset: {
+            /** Format: uuid */
+            workload_id: string;
+            name: string;
+            description?: string;
+            source: string;
+            /** @enum {string} */
+            privacy_classification: "public" | "internal" | "confidential" | "restricted";
+            cases: components["schemas"]["EvaluationCase"][];
+        };
+        CreateEvaluationRun: {
+            /** Format: uuid */
+            dataset_id: string;
+            candidate_execution: {
+                /** @enum {string} */
+                adapter: "deterministic_mock";
+                /** @enum {string} */
+                mode: "expected" | "echo" | "fixed";
+                currency: string;
+            } & {
+                [key: string]: unknown;
+            };
         };
     };
     responses: {
@@ -941,6 +1093,126 @@ export interface operations {
                     "application/json": {
                         items: components["schemas"]["AuditEntry"][];
                     };
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    listEvaluationDatasets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Evaluation datasets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["EvaluationDataset"][];
+                    };
+                };
+            };
+        };
+    };
+    createEvaluationDataset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEvaluationDataset"];
+            };
+        };
+        responses: {
+            /** @description Dataset created atomically with sanitized cases */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationDataset"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getEvaluationDataset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                datasetID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dataset cases and runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationDataset"];
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    createEvaluationRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEvaluationRun"];
+            };
+        };
+        responses: {
+            /** @description Deterministic candidate evaluation completed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRun"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getEvaluationRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Evaluation run results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRun"];
                 };
             };
             404: components["responses"]["Error"];
