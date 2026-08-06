@@ -60,11 +60,11 @@ compose-config:
 	docker compose config
 
 demo:
-	docker compose up -d postgres redis
+	docker compose up --wait -d postgres redis
 	cd apps/api && DATABASE_URL='postgres://ai_operations:local-development-only@localhost:5432/ai_operations?sslmode=disable' go run ./cmd/migrate
 	cd apps/api && DATABASE_URL='postgres://ai_operations:local-development-only@localhost:5432/ai_operations?sslmode=disable' SEED_OWNER_PASSWORD='demo-owner-password' go run ./cmd/seed-auth
 	cd apps/api && DATABASE_URL='postgres://ai_operations:local-development-only@localhost:5432/ai_operations?sslmode=disable' go run ./cmd/seed-demo
-	docker compose up -d --build api web
+	docker compose up --wait -d --build api web
 	@echo 'Login: owner@example.test / demo-owner-password'
 	@echo 'Web: http://localhost:3000'
 	@echo 'API documentation: http://localhost:3000/docs/ingestion-api'

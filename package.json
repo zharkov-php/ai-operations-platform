@@ -1,12 +1,18 @@
 {
   "name": "ai-operations-platform",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "workspaces": ["apps/web", "apps/mobile", "packages/api-client"],
+  "workspaces": [
+    "apps/web",
+    "apps/mobile",
+    "packages/api-client"
+  ],
   "scripts": {
     "build": "npm run build --workspace web && npm run typecheck --workspace mobile",
     "lint": "npm run lint --workspace web && npm run lint --workspace mobile",
     "test": "npm run test --workspace web && npm run test --workspace mobile"
   },
-  "engines": { "node": ">=22.13.0" }
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }
