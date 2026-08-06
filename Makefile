@@ -25,7 +25,7 @@ test-api:
 	cd apps/api && go test ./...
 
 test-integration:
-	cd apps/api && TEST_DATABASE_URL="$${DATABASE_URL}" go test ./internal/portfolio ./internal/pricing ./internal/ingestion ./internal/analytics -run Postgres
+	cd apps/api && TEST_DATABASE_URL="$${DATABASE_URL}" go test ./internal/portfolio ./internal/pricing ./internal/ingestion ./internal/analytics ./internal/recommendation -run Postgres
 
 test-web:
 	npm run test --workspace web

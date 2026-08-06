@@ -4,7 +4,7 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–7 are implemented: the platform securely ingests, prices, and analyzes organization-scoped LLM calls. Analytics provide cost breakdowns and trends, tokens, latency percentiles, errors, retries, previous-period comparison, and explicitly estimated monthly projection. Date boundaries honor IANA timezones, ranges and result sets are bounded, and currencies are never silently combined. Recommendations and complete demo data are not implemented yet.
+Phases 0–8 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. Versioned deterministic rules expose reason codes, evidence, confidence inputs, estimated savings/cost/break-even, quality and operational risk, and required next action. Critical or insufficient-evidence workloads explicitly keep their current model. Recommendations never claim verified savings or apply production changes. Evaluations, experiments, and complete demo data are not implemented yet.
 
 ## Planned product surfaces
 
