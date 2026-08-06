@@ -74,6 +74,7 @@ export const publicRoutes = [
   "/", "/features", "/pricing", "/docs", "/docs/getting-started", "/docs/ingestion-api",
   "/docs/cost-model", "/docs/recommendations", "/docs/security", "/blog", "/compare",
   "/compare/illustrative-frontier-vs-illustrative-small", "/security", "/privacy", "/terms",
+  "/tools/llm-cost-calculator", "/tools/prompt-cost-estimator", "/tools/model-routing-advisor",
   ...articles.map((article) => `/blog/${article.slug}`),
 ] as const;
 

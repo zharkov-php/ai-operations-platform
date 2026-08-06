@@ -61,3 +61,39 @@ test("dashboard is excluded from indexing", async ({ page }) => {
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard foundation");
 });
+
+test("cost calculator updates exact estimates and shareable URL state", async ({ page }) => {
+  await page.goto("/tools/llm-cost-calculator");
+  await page.getByLabel("Monthly requests").fill("100000");
+  await page.getByLabel("Average input tokens").fill("1000");
+  await page.getByLabel("Average output tokens").fill("250");
+  await page.getByLabel("Cached input tokens").fill("500");
+  await expect(page.getByLabel("Cost estimate")).toContainText("$750 / month");
+  await page.getByRole("button", { name: "Update shareable URL" }).click();
+  await expect(page).toHaveURL(/requests=100000/);
+  await page.reload();
+  await expect(page.getByLabel("Cost estimate")).toContainText("$750 / month");
+});
+
+test("prompt estimator keeps pasted content browser-local", async ({ page }) => {
+  const requests: string[] = [];
+  page.on("request", (request) => requests.push(request.url()));
+  await page.goto("/tools/prompt-cost-estimator");
+  requests.length = 0;
+  await page.getByLabel("Prompt text").fill("private-example-12345678");
+  await expect(page.getByLabel("Token estimate")).toContainText("6 estimated tokens");
+  await page.waitForTimeout(150);
+  expect(requests.some((url) => url.includes("private-example"))).toBe(false);
+  expect(requests.some((url) => new URL(url).pathname.startsWith("/api/"))).toBe(false);
+  expect(page.url()).not.toContain("private-example");
+});
+
+test("routing advisor explains a deterministic code candidate", async ({ page }) => {
+  await page.goto("/tools/model-routing-advisor");
+  await page.getByLabel("Does the task require natural-language understanding?").selectOption("false");
+  await page.getByLabel("Is there one exact correct answer?").selectOption("true");
+  await expect(page.getByLabel("Routing advice")).toContainText("Deterministic code");
+  await expect(page.getByLabel("Routing advice")).toContainText("one exact answer");
+  await page.getByRole("button", { name: "Update shareable URL" }).click();
+  await expect(page).toHaveURL(/understandsLanguage=false/);
+});

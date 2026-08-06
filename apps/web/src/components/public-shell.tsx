@@ -6,6 +6,7 @@ const navigation = [
   ["Docs", "/docs"],
   ["Blog", "/blog"],
   ["Compare", "/compare"],
+  ["Tools", "/tools/llm-cost-calculator"],
 ] as const;
 
 export function PublicHeader() {
@@ -34,6 +35,9 @@ export function PublicFooter() {
       </div>
       <nav aria-label="Footer navigation">
         <Link href="/docs/security">Documentation</Link>
+        <Link href="/tools/llm-cost-calculator">Cost calculator</Link>
+        <Link href="/tools/prompt-cost-estimator">Prompt estimator</Link>
+        <Link href="/tools/model-routing-advisor">Routing advisor</Link>
         <Link href="/security">Security</Link>
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>

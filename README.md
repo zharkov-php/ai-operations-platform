@@ -4,11 +4,11 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–9 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The indexable public Next.js site now includes product, documentation, comparison, security, policy, and technical article routes with canonical metadata, sitemap, robots policy, structured data, responsive navigation, and browser accessibility checks. Versioned deterministic rules expose reason codes, evidence, confidence inputs, estimated savings/cost/break-even, quality and operational risk, and required next action. Recommendations never claim verified savings or apply production changes. Public calculators, evaluations, experiments, and complete demo data are not implemented yet.
+Phases 0–10 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The indexable public Next.js site includes product, documentation, comparison, security, policy, and technical article routes plus an illustrative LLM cost calculator, a browser-local prompt token estimator, and a deterministic model-routing advisor. Versioned rules expose reason codes, evidence, confidence inputs, estimated savings/cost/break-even, quality and operational risk, and required next action. Recommendations never claim verified savings or apply production changes. The private dashboard, evaluations, experiments, and complete demo data are not implemented yet.
 
 ## Planned product surfaces
 
-- **Public website:** indexable product, documentation, comparison, and blog routes are implemented; educational calculators are next.
+- **Public website:** indexable product, documentation, comparison, blog, and educational optimization tools are implemented.
 - **Private platform:** organization-scoped cost analytics, workload evidence, recommendations, evaluations, experiments, budgets, and alerts.
 - **Mobile companion:** concise operational views and authorized actions for alerts, recommendations, and experiments.
 
@@ -33,7 +33,7 @@ Install dependencies with `npm ci`, then use `make build`, `make test`, `make li
 
 ## Limitations
 
-The current public pricing and model comparison content is illustrative and is not live provider data. Public tools, the private dashboard UI, evaluations, experiments, budgets, notifications, and the complete demo remain planned. No recommendation automatically changes production execution, and no estimated savings are presented as verified.
+The current public pricing and model comparison content is illustrative and is not live provider data. The prompt estimator uses a documented approximation rather than a provider tokenizer. The private dashboard UI, evaluations, experiments, budgets, notifications, and complete demo remain planned. No recommendation automatically changes production execution, and no estimated savings are presented as verified.
 
 ## License
 
