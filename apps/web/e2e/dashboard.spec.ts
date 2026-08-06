@@ -5,6 +5,7 @@ const projectID = "11111111-1111-4111-8111-111111111111";
 const workloadID = "22222222-2222-4222-8222-222222222222";
 const recommendationID = "33333333-3333-4333-8333-333333333333";
 const datasetID = "99999999-9999-4999-8999-999999999999";
+const localModelID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const now = "2026-08-06T10:00:00Z";
 
 const project = { id: projectID, organization_id: "44444444-4444-4444-8444-444444444444", name: "Demo Operations", slug: "demo-operations", environment: "production", monthly_budget: "2000", currency: "USD", status: "active", created_at: now, updated_at: now };
@@ -16,6 +17,7 @@ const evaluationCases = [
   { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", sanitized_input: { ticket: "password reset" }, expected_output: { label: "access" }, validation_rules: [{ type: "classification_match", field: "label" }], metadata: { sanitized: true } },
 ];
 const dataset = { id: datasetID, workload_id: workloadID, name: "Ticket ground truth", description: "Sanitized cases", source: "sanitized production samples", privacy_classification: "internal", case_count: 2, cases: evaluationCases, runs: [] as Array<Record<string, unknown>>, created_at: now, updated_at: now };
+const localModel = { id: localModelID, organization_id: project.organization_id, hardware_name: "Illustrative GPU workstation", purchase_cost: "3600.000000000000", useful_lifetime_months: 36, monthly_electricity: "40.000000000000", monthly_maintenance: "60.000000000000", available_memory_gb: "48.0000", estimated_requests_per_second: "2.000000", utilization: "0.250000", supported_model: "illustrative-local-8b", context_limit: 32768, currency: "USD", benchmark_source: "User estimate; not measured", created_at: now, updated_at: now };
 
 async function authenticate(page: Page) {
   await page.context().addCookies([{ name: "access_token", value: "e2e-session", url: "http://127.0.0.1:3100", httpOnly: true, sameSite: "Lax" }]);
@@ -63,6 +65,8 @@ async function mockAPI(page: Page, overrides: Record<string, { status?: number; 
       dataset.runs.unshift(run);
       return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(run) });
     }
+    else if (url.pathname === "/api/v1/local-model-configurations") body = { items: [localModel] };
+    else if (url.pathname === `/api/v1/local-model-configurations/${localModelID}/compare`) body = { supported: true, constraints: [], monthly_capacity: "1296000", hardware_amortization: "100.000000000000", local_monthly_cost: "200.000000000000", hosted_monthly_cost: "1000.000000000000", local_cost_per_request: "0.002000000000", estimated_monthly_savings: "800.000000000000", estimated_break_even_months: "4.0000", currency: "USD", methodology: "30-day capacity; straight-line hardware amortization" };
     else return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { code: "not_found", message: "not found", request_id: "e2e" } }) });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   });
@@ -175,4 +179,15 @@ test("evaluation dataset runs a deterministic candidate and reports quality and 
   await expect(page.getByRole("cell", { name: "1.0000" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "-0.038000000000" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "completed" })).toBeVisible();
+});
+
+test("local model economics compares capacity, amortization, and break-even", async ({ page }) => {
+  await authenticate(page); await mockAPI(page); await page.goto("/dashboard/local-models");
+  await expect(page.getByLabel("Configuration")).toContainText("illustrative-local-8b");
+  await page.getByRole("button", { name: "Compare 100,000 monthly requests" }).click();
+  await expect(page.getByText("USD 200.00")).toBeVisible();
+  await expect(page.getByText("USD 800.00")).toBeVisible();
+  await expect(page.getByText("4.0000")).toBeVisible();
+  await expect(page.getByLabel("Hosted versus local monthly cost chart")).toBeVisible();
+  await expect(page.getByText(/not a benchmark/i)).toBeVisible();
 });

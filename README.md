@@ -4,12 +4,12 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–13 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The public Next.js site and optimization tools are indexable, while the authenticated dashboard is protected and `noindex`. The dashboard uses a generated OpenAPI client for analytics, drill-down, redacted call exploration, recommendation review, sanitized evaluation datasets, and deterministic candidate runs. Evaluation results report case-level validation, quality score, latency, estimated cost, and control deltas without external provider credentials. Acceptance never changes production execution and savings remain estimated until a later controlled experiment verifies them.
+Phases 0–14 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The public Next.js site and optimization tools are indexable, while the authenticated dashboard is protected and `noindex`. The dashboard uses a generated OpenAPI client for analytics, recommendation review, sanitized evaluations, and local-model economics. Evaluation results report case-level quality, latency, cost, and control deltas. Local simulations expose hardware amortization, utilization, capacity, memory/context constraints, and purchase-cost break-even without implying benchmark or model-quality accuracy.
 
 ## Planned product surfaces
 
 - **Public website:** indexable product, documentation, comparison, blog, and educational optimization tools are implemented.
-- **Private platform:** authentication, organization-scoped analytics, workload evidence, audited recommendation review, and deterministic candidate evaluations are implemented; experiments, budgets, and alerts follow in later phases.
+- **Private platform:** authentication, organization-scoped analytics, workload evidence, audited recommendation review, deterministic candidate evaluations, and hosted-versus-local economics are implemented; experiments, budgets, and alerts follow in later phases.
 - **Mobile companion:** concise operational views and authorized actions for alerts, recommendations, and experiments.
 
 The platform will keep observed cost, estimated savings, evaluated outcomes, and verified savings distinct. Recommendations will begin with transparent deterministic rules and will never directly switch production execution.
@@ -33,7 +33,7 @@ Install dependencies with `npm ci`, then use `make build`, `make test`, `make li
 
 ## Limitations
 
-The current public pricing and model comparison content is illustrative and is not live provider data. The prompt estimator uses a documented approximation rather than a provider tokenizer. Evaluation execution currently supports deterministic mock candidates and a documented JSON Schema subset; hosted provider adapters, experiments, budgets, notifications, and the complete demo remain planned. No recommendation automatically changes production execution, and no estimated savings are presented as verified.
+The current public pricing and model comparison content is illustrative and is not live provider data. The prompt estimator uses a documented approximation rather than a provider tokenizer. Evaluation execution currently supports deterministic mock candidates and a documented JSON Schema subset. Local throughput and hardware fields are user estimates, not measured benchmarks. Ollama execution, experiments, budgets, notifications, and the complete demo remain planned. No estimated savings are presented as verified.
 
 ## License
 

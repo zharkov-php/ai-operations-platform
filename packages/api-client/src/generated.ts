@@ -356,6 +356,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/local-model-configurations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listLocalModelConfigurations"];
+        put?: never;
+        post: operations["createLocalModelConfiguration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/local-model-configurations/{configurationID}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["compareLocalModelEconomics"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -643,6 +675,49 @@ export interface components {
             } & {
                 [key: string]: unknown;
             };
+        };
+        LocalModelConfigurationInput: {
+            hardware_name: string;
+            purchase_cost: string;
+            useful_lifetime_months: number;
+            monthly_electricity: string;
+            monthly_maintenance: string;
+            available_memory_gb: string;
+            estimated_requests_per_second: string;
+            utilization: string;
+            supported_model: string;
+            context_limit: number;
+            currency: string;
+            benchmark_source: string;
+        };
+        LocalModelConfiguration: components["schemas"]["LocalModelConfigurationInput"] & {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        LocalModelComparisonInput: {
+            monthly_requests: number;
+            hosted_cost_per_request: string;
+            required_memory_gb: string;
+            required_context_tokens: number;
+        };
+        LocalModelComparison: {
+            supported: boolean;
+            constraints: string[];
+            monthly_capacity: string;
+            hardware_amortization: string;
+            local_monthly_cost: string;
+            hosted_monthly_cost: string;
+            local_cost_per_request?: string | null;
+            estimated_monthly_savings: string;
+            estimated_break_even_months?: string | null;
+            currency: string;
+            methodology: string;
         };
     };
     responses: {
@@ -1215,6 +1290,82 @@ export interface operations {
                     "application/json": components["schemas"]["EvaluationRun"];
                 };
             };
+            404: components["responses"]["Error"];
+        };
+    };
+    listLocalModelConfigurations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Local model configurations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["LocalModelConfiguration"][];
+                    };
+                };
+            };
+        };
+    };
+    createLocalModelConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocalModelConfigurationInput"];
+            };
+        };
+        responses: {
+            /** @description Configuration created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalModelConfiguration"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    compareLocalModelEconomics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                configurationID: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocalModelComparisonInput"];
+            };
+        };
+        responses: {
+            /** @description Hosted and local economics comparison */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalModelComparison"];
+                };
+            };
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };
     };

@@ -158,6 +158,26 @@ paths:
       responses:
         '200': { description: Evaluation run results, content: { application/json: { schema: { $ref: '#/components/schemas/EvaluationRun' } } } }
         '404': { $ref: '#/components/responses/Error' }
+  /api/v1/local-model-configurations:
+    get:
+      operationId: listLocalModelConfigurations
+      responses: { '200': { description: Local model configurations, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/LocalModelConfiguration' } } } } } } } }
+    post:
+      operationId: createLocalModelConfiguration
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LocalModelConfigurationInput' } } } }
+      responses:
+        '201': { description: Configuration created, content: { application/json: { schema: { $ref: '#/components/schemas/LocalModelConfiguration' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /api/v1/local-model-configurations/{configurationID}/compare:
+    post:
+      operationId: compareLocalModelEconomics
+      parameters: [ { name: configurationID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LocalModelComparisonInput' } } } }
+      responses:
+        '200': { description: Hosted and local economics comparison, content: { application/json: { schema: { $ref: '#/components/schemas/LocalModelComparison' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
 components:
   securitySchemes:
     cookieSession: { type: apiKey, in: cookie, name: access_token }
@@ -241,4 +261,20 @@ components:
       type: object
       required: [dataset_id, candidate_execution]
       properties: { dataset_id: { type: string, format: uuid }, candidate_execution: { type: object, required: [adapter, mode, currency], additionalProperties: true, properties: { adapter: { type: string, enum: [deterministic_mock] }, mode: { type: string, enum: [expected, echo, fixed] }, currency: { type: string } } } }
+    LocalModelConfigurationInput:
+      type: object
+      required: [hardware_name, purchase_cost, useful_lifetime_months, monthly_electricity, monthly_maintenance, available_memory_gb, estimated_requests_per_second, utilization, supported_model, context_limit, currency, benchmark_source]
+      properties: { hardware_name: { type: string }, purchase_cost: { type: string }, useful_lifetime_months: { type: integer }, monthly_electricity: { type: string }, monthly_maintenance: { type: string }, available_memory_gb: { type: string }, estimated_requests_per_second: { type: string }, utilization: { type: string }, supported_model: { type: string }, context_limit: { type: integer }, currency: { type: string }, benchmark_source: { type: string } }
+    LocalModelConfiguration:
+      allOf:
+        - { $ref: '#/components/schemas/LocalModelConfigurationInput' }
+        - { type: object, required: [id, organization_id, created_at, updated_at], properties: { id: { type: string, format: uuid }, organization_id: { type: string, format: uuid }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } } }
+    LocalModelComparisonInput:
+      type: object
+      required: [monthly_requests, hosted_cost_per_request, required_memory_gb, required_context_tokens]
+      properties: { monthly_requests: { type: integer, minimum: 0 }, hosted_cost_per_request: { type: string }, required_memory_gb: { type: string }, required_context_tokens: { type: integer, minimum: 0 } }
+    LocalModelComparison:
+      type: object
+      required: [supported, constraints, monthly_capacity, hardware_amortization, local_monthly_cost, hosted_monthly_cost, estimated_monthly_savings, currency, methodology]
+      properties: { supported: { type: boolean }, constraints: { type: array, items: { type: string } }, monthly_capacity: { type: string }, hardware_amortization: { type: string }, local_monthly_cost: { type: string }, hosted_monthly_cost: { type: string }, local_cost_per_request: { type: [string, 'null'] }, estimated_monthly_savings: { type: string }, estimated_break_even_months: { type: [string, 'null'] }, currency: { type: string }, methodology: { type: string } }
 security: [ { cookieSession: [] } ]
