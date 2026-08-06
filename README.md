@@ -4,12 +4,12 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–11 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The public Next.js site and optimization tools are indexable, while the authenticated dashboard is protected and `noindex`. The dashboard uses a generated OpenAPI client for organization overview, cost/token/reliability charts, project and workload drill-down, redacted call exploration, and read-only recommendation evidence. Versioned rules expose reason codes, evidence, confidence inputs, financial estimates, risks, and required next action. Recommendations never claim verified savings or apply production changes. Evaluation and experiment workflows remain planned.
+Phases 0–12 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The public Next.js site and optimization tools are indexable, while the authenticated dashboard is protected and `noindex`. The dashboard uses a generated OpenAPI client for analytics, drill-down, redacted call exploration, and recommendation review. Authorized users may accept a recommendation for evaluation or reject it with a required reason; atomic transitions, duplicate-action protection, tenant isolation, permissions, and audit history are enforced. Acceptance never changes production execution and savings remain estimated. Evaluation and experiment workflows remain planned.
 
 ## Planned product surfaces
 
 - **Public website:** indexable product, documentation, comparison, blog, and educational optimization tools are implemented.
-- **Private platform:** authentication, organization-scoped cost analytics, workload evidence, and read-only recommendations are implemented; review actions, evaluations, experiments, budgets, and alerts follow in later phases.
+- **Private platform:** authentication, organization-scoped analytics, workload evidence, and audited recommendation review are implemented; evaluations, experiments, budgets, and alerts follow in later phases.
 - **Mobile companion:** concise operational views and authorized actions for alerts, recommendations, and experiments.
 
 The platform will keep observed cost, estimated savings, evaluated outcomes, and verified savings distinct. Recommendations will begin with transparent deterministic rules and will never directly switch production execution.
@@ -33,7 +33,7 @@ Install dependencies with `npm ci`, then use `make build`, `make test`, `make li
 
 ## Limitations
 
-The current public pricing and model comparison content is illustrative and is not live provider data. The prompt estimator uses a documented approximation rather than a provider tokenizer. Recommendation review actions, evaluations, experiments, budgets, notifications, and complete demo remain planned. No recommendation automatically changes production execution, and no estimated savings are presented as verified.
+The current public pricing and model comparison content is illustrative and is not live provider data. The prompt estimator uses a documented approximation rather than a provider tokenizer. Evaluation execution, experiments, budgets, notifications, and complete demo remain planned. No recommendation automatically changes production execution, and no estimated savings are presented as verified.
 
 ## License
 

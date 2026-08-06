@@ -99,6 +99,32 @@ paths:
       responses:
         '200': { description: Recommendation, content: { application/json: { schema: { $ref: '#/components/schemas/Recommendation' } } } }
         '404': { $ref: '#/components/responses/Error' }
+  /api/v1/recommendations/{recommendationID}/accept:
+    post:
+      operationId: acceptRecommendation
+      parameters: [ { name: recommendationID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/RecommendationReviewRequest' } } } }
+      responses:
+        '200': { description: Accepted for evaluation, content: { application/json: { schema: { $ref: '#/components/schemas/Recommendation' } } } }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /api/v1/recommendations/{recommendationID}/reject:
+    post:
+      operationId: rejectRecommendation
+      parameters: [ { name: recommendationID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RecommendationReviewRequest' } } } }
+      responses:
+        '200': { description: Rejected recommendation, content: { application/json: { schema: { $ref: '#/components/schemas/Recommendation' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /api/v1/recommendations/{recommendationID}/audit-history:
+    get:
+      operationId: getRecommendationAuditHistory
+      parameters: [ { name: recommendationID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      responses:
+        '200': { description: Audit timeline, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/AuditEntry' } } } } } } }
+        '404': { $ref: '#/components/responses/Error' }
 components:
   securitySchemes:
     cookieSession: { type: apiKey, in: cookie, name: access_token }
@@ -152,4 +178,9 @@ components:
       additionalProperties: true
       required: [id, workload_id, recommendation_type, priority, confidence_level, status, currency, quality_risk, operational_risk, required_next_action, rule_version, confidence, estimated_monthly_savings, estimated_implementation_cost, reason_codes, evidence_summary, confidence_inputs, current_execution, proposed_execution, created_at, updated_at]
       properties: { id: { type: string, format: uuid }, workload_id: { type: string, format: uuid }, recommendation_type: { type: string }, priority: { type: string }, confidence_level: { type: string }, status: { type: string }, currency: { type: string }, quality_risk: { type: string }, operational_risk: { type: string }, required_next_action: { type: string }, rule_version: { type: string }, confidence: { type: string }, estimated_monthly_savings: { type: string }, estimated_implementation_cost: { type: string }, estimated_break_even_months: { type: [string, 'null'] }, reason_codes: { type: array, items: { type: string } }, evidence_summary: { type: object, additionalProperties: true }, confidence_inputs: { type: object, additionalProperties: true }, current_execution: { type: object, additionalProperties: true }, proposed_execution: { type: object, additionalProperties: true }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+    RecommendationReviewRequest: { type: object, properties: { reason: { type: string, maxLength: 1000 } } }
+    AuditEntry:
+      type: object
+      required: [id, actor_user_id, action, metadata, created_at]
+      properties: { id: { type: string, format: uuid }, actor_user_id: { type: string, format: uuid }, action: { type: string }, metadata: { type: object, additionalProperties: true }, created_at: { type: string, format: date-time } }
 security: [ { cookieSession: [] } ]

@@ -16,6 +16,8 @@ async function authenticate(page: Page) {
 }
 
 async function mockAPI(page: Page, overrides: Record<string, { status?: number; body: unknown }> = {}) {
+  const currentRecommendation = { ...recommendation };
+  const history: Array<Record<string, unknown>> = [];
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url());
     const overridden = overrides[url.pathname];
@@ -32,11 +34,26 @@ async function mockAPI(page: Page, overrides: Record<string, { status?: number; 
     else if (url.pathname === "/api/v1/workloads") body = { items: [workload], limit: 100, offset: 0 };
     else if (url.pathname === `/api/v1/workloads/${workloadID}`) body = workload;
     else if (url.pathname === "/api/v1/llm-calls") body = { items: [{ id: "66666666-6666-4666-8666-666666666666", organization_id: project.organization_id, project_id: projectID, workload_id: workloadID, external_call_id: "call-100", provider: "Northstar AI", model: "northstar-frontier", estimated_cost: "0.0125", currency: "USD", created_at: now, idempotent_replay: false }], limit: 100, offset: 0 };
-    else if (url.pathname === "/api/v1/recommendations") body = { items: [recommendation] };
-    else if (url.pathname === `/api/v1/recommendations/${recommendationID}`) body = recommendation;
+    else if (url.pathname === "/api/v1/recommendations") body = { items: [currentRecommendation] };
+    else if (url.pathname === `/api/v1/recommendations/${recommendationID}/audit-history`) body = { items: history };
+    else if (url.pathname === `/api/v1/recommendations/${recommendationID}/accept` && route.request().method() === "POST") {
+      if (currentRecommendation.status !== "new") return route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "invalid_transition", message: "already reviewed", request_id: "e2e" } }) });
+      currentRecommendation.status = "accepted";
+      history.push({ id: "77777777-7777-4777-8777-777777777777", actor_user_id: "55555555-5555-4555-8555-555555555555", action: "recommendation.accepted", metadata: { reason: "accepted for evaluation", effect: "authorizes_evaluation_only" }, created_at: now });
+      body = currentRecommendation;
+    }
+    else if (url.pathname === `/api/v1/recommendations/${recommendationID}/reject` && route.request().method() === "POST") {
+      const input = route.request().postDataJSON() as { reason?: string };
+      if (!input.reason?.trim()) return route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ error: { code: "reason_required", message: "reason required", request_id: "e2e" } }) });
+      currentRecommendation.status = "rejected";
+      history.push({ id: "88888888-8888-4888-8888-888888888888", actor_user_id: "55555555-5555-4555-8555-555555555555", action: "recommendation.rejected", metadata: { reason: input.reason }, created_at: now });
+      body = currentRecommendation;
+    }
+    else if (url.pathname === `/api/v1/recommendations/${recommendationID}`) body = currentRecommendation;
     else return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { code: "not_found", message: "not found", request_id: "e2e" } }) });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   });
+  return { recommendation: currentRecommendation, history };
 }
 
 test("sign-in establishes a session and enters the protected dashboard", async ({ page }) => {
@@ -107,4 +124,30 @@ test("an invalid API session returns to sign in", async ({ page }) => {
   await authenticate(page); await mockAPI(page, { "/api/v1/me": { status: 401, body: { error: { code: "unauthorized", message: "authentication is required", request_id: "e2e" } } } });
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/sign-in\?next=%2Fdashboard/);
+});
+
+test("authorized reviewer accepts a recommendation for evaluation only", async ({ page }) => {
+  await authenticate(page); await mockAPI(page); await page.goto(`/dashboard/recommendations/${recommendationID}`);
+  await page.getByRole("button", { name: "Accept for evaluation" }).click();
+  await expect(page.getByText(/high priority · accepted/i)).toBeVisible();
+  await expect(page.getByText("This recommendation was already reviewed. Duplicate actions are disabled.")).toBeVisible();
+  await expect(page.getByText("recommendation · accepted")).toBeVisible();
+  await expect(page.getByText(/never changes production routing/i)).toBeVisible();
+});
+
+test("rejection requires and records a reason", async ({ page }) => {
+  await authenticate(page); await mockAPI(page); await page.goto(`/dashboard/recommendations/${recommendationID}`);
+  await page.getByRole("button", { name: "Reject recommendation" }).click();
+  await expect(page.getByText("A rejection reason is required.")).toBeVisible();
+  await page.getByLabel("Rejection reason").fill("Candidate quality risk is too high");
+  await page.getByRole("button", { name: "Reject recommendation" }).click();
+  await expect(page.getByText(/high priority · rejected/i)).toBeVisible();
+  await expect(page.getByText("Candidate quality risk is too high")).toBeVisible();
+});
+
+test("viewer can inspect evidence but cannot perform review actions", async ({ page }) => {
+  await authenticate(page); await mockAPI(page, { "/api/v1/me": { body: { id: "55555555-5555-4555-8555-555555555555", organization_id: project.organization_id, role: "viewer" } } });
+  await page.goto(`/dashboard/recommendations/${recommendationID}`);
+  await expect(page.getByText(/viewer role can inspect evidence but cannot review/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept for evaluation" })).toHaveCount(0);
 });

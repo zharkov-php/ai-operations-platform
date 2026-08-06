@@ -244,6 +244,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recommendations/{recommendationID}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acceptRecommendation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendations/{recommendationID}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectRecommendation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendations/{recommendationID}/audit-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRecommendationAuditHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -428,6 +476,21 @@ export interface components {
             updated_at: string;
         } & {
             [key: string]: unknown;
+        };
+        RecommendationReviewRequest: {
+            reason?: string;
+        };
+        AuditEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            actor_user_id: string;
+            action: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
         };
     };
     responses: {
@@ -796,6 +859,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Recommendation"];
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    acceptRecommendation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recommendationID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RecommendationReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted for evaluation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recommendation"];
+                };
+            };
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    rejectRecommendation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recommendationID: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendationReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Rejected recommendation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recommendation"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    getRecommendationAuditHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recommendationID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["AuditEntry"][];
+                    };
                 };
             };
             404: components["responses"]["Error"];

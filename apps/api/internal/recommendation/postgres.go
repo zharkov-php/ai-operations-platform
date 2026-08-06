@@ -4,14 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
 )
 
-var ErrNotFound = errors.New("recommendation not found")
+var (
+	ErrNotFound          = errors.New("recommendation not found")
+	ErrInvalidTransition = errors.New("invalid recommendation transition")
+	ErrReasonRequired    = errors.New("rejection reason is required")
+)
 
 type Recommendation struct {
 	ID                          string         `json:"id"`
@@ -38,6 +44,14 @@ type Recommendation struct {
 	UpdatedAt                   time.Time      `json:"updated_at"`
 }
 type Store struct{ pool *pgxpool.Pool }
+
+type AuditEntry struct {
+	ID          string         `json:"id"`
+	ActorUserID string         `json:"actor_user_id"`
+	Action      string         `json:"action"`
+	Metadata    map[string]any `json:"metadata"`
+	CreatedAt   time.Time      `json:"created_at"`
+}
 
 func NewStore(pool *pgxpool.Pool) *Store { return &Store{pool: pool} }
 func (s *Store) AnalyzeOrganization(ctx context.Context, orgID string) ([]Recommendation, error) {
@@ -168,6 +182,78 @@ func (s *Store) Get(ctx context.Context, orgID, id string) (Recommendation, erro
 		return Recommendation{}, ErrNotFound
 	}
 	return item, err
+}
+
+func NextReviewStatus(current, action string) (string, error) {
+	if current != "new" && current != "under_review" {
+		return "", ErrInvalidTransition
+	}
+	switch action {
+	case "accept":
+		return "accepted", nil
+	case "reject":
+		return "rejected", nil
+	default:
+		return "", ErrInvalidTransition
+	}
+}
+
+func (s *Store) Review(ctx context.Context, orgID, actorID, id, action, reason string) (Recommendation, error) {
+	reason = strings.TrimSpace(reason)
+	if action == "reject" && reason == "" {
+		return Recommendation{}, ErrReasonRequired
+	}
+	if utf8.RuneCountInString(reason) > 1000 {
+		return Recommendation{}, ErrReasonRequired
+	}
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return Recommendation{}, err
+	}
+	defer tx.Rollback(ctx)
+	var current string
+	err = tx.QueryRow(ctx, `SELECT r.status FROM recommendations r JOIN workloads w ON w.id=r.workload_id JOIN projects p ON p.id=w.project_id WHERE r.id=$1 AND p.organization_id=$2 FOR UPDATE OF r`, id, orgID).Scan(&current)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Recommendation{}, ErrNotFound
+	}
+	if err != nil {
+		return Recommendation{}, err
+	}
+	target, err := NextReviewStatus(current, action)
+	if err != nil {
+		return Recommendation{}, err
+	}
+	if _, err = tx.Exec(ctx, `UPDATE recommendations SET status=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$1`, id, target); err != nil {
+		return Recommendation{}, err
+	}
+	metadata, _ := json.Marshal(map[string]any{"from_status": current, "to_status": target, "reason": reason, "effect": "authorizes_evaluation_only"})
+	if _, err = tx.Exec(ctx, `INSERT INTO audit_entries(organization_id,actor_user_id,action,subject_type,subject_id,metadata) VALUES($1,$2,$3,'recommendation',$4,$5)`, orgID, actorID, "recommendation."+target, id, metadata); err != nil {
+		return Recommendation{}, err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return Recommendation{}, err
+	}
+	return s.Get(ctx, orgID, id)
+}
+
+func (s *Store) AuditHistory(ctx context.Context, orgID, id string) ([]AuditEntry, error) {
+	if _, err := s.Get(ctx, orgID, id); err != nil {
+		return nil, err
+	}
+	rows, err := s.pool.Query(ctx, `SELECT id,actor_user_id,action,metadata,created_at FROM audit_entries WHERE organization_id=$1 AND subject_type='recommendation' AND subject_id=$2 ORDER BY created_at,id`, orgID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AuditEntry{}
+	for rows.Next() {
+		var item AuditEntry
+		if err = rows.Scan(&item.ID, &item.ActorUserID, &item.Action, &item.Metadata, &item.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
 }
 
 const baseSelect = `SELECT r.id,r.workload_id,r.recommendation_type,r.priority,r.confidence_level,r.confidence::text,r.status,r.current_execution,r.proposed_execution,r.reason_codes,r.evidence_summary,r.confidence_inputs,r.estimated_monthly_savings::text,r.currency,r.estimated_implementation_cost::text,r.estimated_break_even_months::text,r.quality_risk,r.operational_risk,r.required_next_action,r.rule_version,r.created_at,r.updated_at FROM recommendations r JOIN workloads w ON w.id=r.workload_id JOIN projects p ON p.id=w.project_id`
