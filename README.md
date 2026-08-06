@@ -4,7 +4,7 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–5 are implemented: the architecture, monorepo, service foundation, authentication, projects/workloads, and versioned model catalog exist. Pricing periods reject overlap at the database boundary, retain effective dates and source notes, label illustrative data, and use decimal-safe cost calculations. Ingestion, analytics, recommendations, and complete demo data are not implemented yet.
+Phases 0–6 are implemented: the platform now securely ingests and prices LLM calls in addition to its foundation, authentication, projects/workloads, and model catalog. Scoped API keys are hashed and shown once; prompts, responses, credentials, and contacts are redacted before persistence; exact retries are idempotent; batches are atomic; and effective pricing uses decimal arithmetic. Analytics, recommendations, and complete demo data are not implemented yet.
 
 ## Planned product surfaces
 

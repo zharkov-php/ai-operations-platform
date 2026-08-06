@@ -34,7 +34,7 @@ No runtime directories exist in Phase 0. They will be created only when their ph
 
 ## Request and data flow
 
-Ingestion authenticates a scoped, hashed API key, validates and limits the payload, redacts sensitive content before persistence, resolves effective pricing, calculates decimal-safe cost, and applies an idempotency boundary. Analytics read bounded, indexed tenant-scoped ranges. Recommendation workers analyze measurable aggregates and persist rule version, evidence, and confidence inputs.
+Ingestion authenticates a scoped, hashed API key, validates and limits the payload, redacts sensitive content before persistence, resolves effective pricing, calculates decimal-safe cost, and applies an idempotency boundary. Batch ingestion is atomic: every item is validated and prepared before a single transaction writes the batch. Exact retries require the same organization, external call ID, and payload hash; a changed payload returns a conflict. Analytics read bounded, indexed tenant-scoped ranges. Recommendation workers analyze measurable aggregates and persist rule version, evidence, and confidence inputs.
 
 ## Deployment model
 

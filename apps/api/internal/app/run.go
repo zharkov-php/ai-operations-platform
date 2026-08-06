@@ -11,10 +11,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/apikey"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/auth"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/config"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/dependencies"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/httpapi"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/ingestion"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/portfolio"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/pricing"
 )
@@ -33,7 +35,8 @@ func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	defer redisClient.Close()
 
 	authService := auth.NewService(auth.NewPostgresStore(pool), []byte(cfg.AuthTokenSecret))
-	server := &http.Server{Addr: cfg.Address, Handler: httpapi.NewHandler(logger, httpapi.Dependencies{Database: dependencies.Postgres{Pool: pool}, Redis: dependencies.Redis{Client: redisClient}, Auth: authService, Portfolio: portfolio.NewStore(pool), Pricing: pricing.NewStore(pool)}, prometheus.NewRegistry()), ReadHeaderTimeout: cfg.ReadTimeout, WriteTimeout: cfg.WriteTimeout, IdleTimeout: cfg.IdleTimeout}
+	pricingStore := pricing.NewStore(pool)
+	server := &http.Server{Addr: cfg.Address, Handler: httpapi.NewHandler(logger, httpapi.Dependencies{Database: dependencies.Postgres{Pool: pool}, Redis: dependencies.Redis{Client: redisClient}, Auth: authService, Portfolio: portfolio.NewStore(pool), Pricing: pricingStore, APIKeys: apikey.NewStore(pool), Ingestion: ingestion.NewStore(pool, pricingStore), RateLimiter: redisClient}, prometheus.NewRegistry()), ReadHeaderTimeout: cfg.ReadTimeout, WriteTimeout: cfg.WriteTimeout, IdleTimeout: cfg.IdleTimeout}
 	errCh := make(chan error, 1)
 	go func() { errCh <- server.ListenAndServe() }()
 	logger.Info("api started", "address", cfg.Address)

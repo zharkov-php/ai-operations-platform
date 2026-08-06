@@ -11,7 +11,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/apikey"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/auth"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/ingestion"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/portfolio"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/pricing"
 )
@@ -23,6 +26,9 @@ type Dependencies struct {
 	Auth            *auth.Service
 	Portfolio       *portfolio.Store
 	Pricing         *pricing.Store
+	APIKeys         *apikey.Store
+	Ingestion       *ingestion.Store
+	RateLimiter     *redis.Client
 }
 
 type errorBody struct {
@@ -52,6 +58,8 @@ func NewHandler(logger *slog.Logger, deps Dependencies, registry *prometheus.Reg
 	registerAuthRoutes(router, deps.Auth)
 	registerPortfolioRoutes(router, deps.Auth, deps.Portfolio)
 	registerPricingRoutes(router, deps.Auth, deps.Pricing)
+	registerAPIKeyRoutes(router, deps.Auth, deps.APIKeys)
+	registerIngestionRoutes(router, deps.Auth, deps.APIKeys, deps.Ingestion, deps.RateLimiter)
 	return http.MaxBytesHandler(router, 1<<20)
 }
 
