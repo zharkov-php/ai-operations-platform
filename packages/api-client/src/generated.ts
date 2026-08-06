@@ -532,6 +532,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/budget-thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listBudgetThresholds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/budget-thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setBudgetThreshold"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budget-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listBudgetAlerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budget-alerts/{alertID}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acknowledgeBudgetAlert"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budget-alerts/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["evaluateBudgets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -926,6 +1006,36 @@ export interface components {
             updated_at: string;
         } & {
             [key: string]: unknown;
+        };
+        BudgetThreshold: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            project_id: string;
+            percentage: string;
+            severity: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        BudgetAlert: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            project_id: string;
+            threshold_type: string;
+            threshold_value: string;
+            severity: string;
+            status: string;
+            dedupe_key: string;
+            evidence: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            triggered_at: string;
+            /** Format: date-time */
+            acknowledged_at?: string | null;
+            /** Format: uuid */
+            acknowledged_by?: string | null;
         };
     };
     responses: {
@@ -1819,6 +1929,129 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Experiment"];
+                };
+            };
+        };
+    };
+    listBudgetThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget thresholds */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["BudgetThreshold"][];
+                    };
+                };
+            };
+        };
+    };
+    setBudgetThreshold: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    percentage: string;
+                    /** @enum {string} */
+                    severity: "info" | "warning" | "critical";
+                };
+            };
+        };
+        responses: {
+            /** @description Threshold configured */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetThreshold"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
+    listBudgetAlerts: {
+        parameters: {
+            query?: {
+                status?: "open" | "acknowledged" | "resolved";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget alerts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["BudgetAlert"][];
+                    };
+                };
+            };
+        };
+    };
+    acknowledgeBudgetAlert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alertID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Alert acknowledged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetAlert"];
+                };
+            };
+            409: components["responses"]["Error"];
+        };
+    };
+    evaluateBudgets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scheduled evaluation result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        created: number;
+                        suppressed: number;
+                    };
                 };
             };
         };

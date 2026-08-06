@@ -7,6 +7,7 @@ const recommendationID = "33333333-3333-4333-8333-333333333333";
 const datasetID = "99999999-9999-4999-8999-999999999999";
 const localModelID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const experimentID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+const alertID = "ffffffff-ffff-4fff-8fff-ffffffffffff";
 const now = "2026-08-06T10:00:00Z";
 
 const project = { id: projectID, organization_id: "44444444-4444-4444-8444-444444444444", name: "Demo Operations", slug: "demo-operations", environment: "production", monthly_budget: "2000", currency: "USD", status: "active", created_at: now, updated_at: now };
@@ -20,6 +21,7 @@ const evaluationCases = [
 const dataset = { id: datasetID, workload_id: workloadID, name: "Ticket ground truth", description: "Sanitized cases", source: "sanitized production samples", privacy_classification: "internal", case_count: 2, cases: evaluationCases, runs: [] as Array<Record<string, unknown>>, created_at: now, updated_at: now };
 const localModel = { id: localModelID, organization_id: project.organization_id, hardware_name: "Illustrative GPU workstation", purchase_cost: "3600.000000000000", useful_lifetime_months: 36, monthly_electricity: "40.000000000000", monthly_maintenance: "60.000000000000", available_memory_gb: "48.0000", estimated_requests_per_second: "2.000000", utilization: "0.250000", supported_model: "illustrative-local-8b", context_limit: 32768, currency: "USD", benchmark_source: "User estimate; not measured", created_at: now, updated_at: now };
 const experiment = { id: experimentID, workload_id: workloadID, recommendation_id: recommendationID, status: "running", currency: "USD", rollback_reason: "", control_execution: { model: "northstar-frontier" }, candidate_execution: { model: "northstar-compact" }, results: {}, traffic_percentage: "10.00", verified_savings: null, guardrails: { minimum_quality_score: "0.90", maximum_latency_ms: "500", maximum_error_rate: "0.05", maximum_cost_per_call: "0.02" }, started_at: now, completed_at: null, version: 3, created_at: now, updated_at: now };
+const alert = { id: alertID, project_id: projectID, threshold_type: "projected_overspend", threshold_value: "2400.000000000000", severity: "warning", status: "open", dedupe_key: "projected_overspend:2026-08", evidence: { projection: "2400", budget: "2000", method: "elapsed_day_linear" }, triggered_at: now, acknowledged_at: null, acknowledged_by: null };
 
 async function authenticate(page: Page) {
   await page.context().addCookies([{ name: "access_token", value: "e2e-session", url: "http://127.0.0.1:3100", httpOnly: true, sameSite: "Lax" }]);
@@ -28,6 +30,7 @@ async function authenticate(page: Page) {
 async function mockAPI(page: Page, overrides: Record<string, { status?: number; body: unknown }> = {}) {
   const currentRecommendation = { ...recommendation };
   const currentExperiment = { ...experiment, results: {} as Record<string, unknown> };
+  const currentAlert = { ...alert, acknowledged_at: null as string | null, acknowledged_by: null as string | null };
   const history: Array<Record<string, unknown>> = [];
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url());
@@ -73,6 +76,8 @@ async function mockAPI(page: Page, overrides: Record<string, { status?: number; 
     else if (url.pathname === "/api/v1/experiments") body = { items: [currentExperiment] };
     else if (url.pathname === `/api/v1/experiments/${experimentID}/metrics`) { currentExperiment.status = "rolled_back"; currentExperiment.rollback_reason = "automatic guardrail violation"; currentExperiment.version++; currentExperiment.results = { guardrail_violations: ["quality_below_minimum"] }; body = currentExperiment; }
     else if (url.pathname === `/api/v1/experiments/${experimentID}`) body = currentExperiment;
+    else if (url.pathname === "/api/v1/budget-alerts") body = { items: [currentAlert] };
+    else if (url.pathname === `/api/v1/budget-alerts/${alertID}/acknowledge`) { currentAlert.status = "acknowledged"; currentAlert.acknowledged_at = now; currentAlert.acknowledged_by = "55555555-5555-4555-8555-555555555555"; body = currentAlert; }
     else return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { code: "not_found", message: "not found", request_id: "e2e" } }) });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   });
@@ -206,4 +211,14 @@ test("experiment guardrail violation automatically rolls back candidate traffic"
   await expect(page.getByText("automatic guardrail violation")).toBeVisible();
   await expect(page.getByText(/quality_below_minimum/)).toBeVisible();
   await expect(page.getByText(/Only a verified experiment result/)).toBeVisible();
+});
+
+test("budget alert center acknowledges a deduplicated projected overspend alert", async ({ page }) => {
+  await authenticate(page); await mockAPI(page); await page.goto("/dashboard/alerts");
+  await expect(page.getByText("1 open")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "projected overspend" })).toBeVisible();
+  await page.getByRole("button", { name: "Acknowledge alert" }).click();
+  await expect(page.getByText("0 open")).toBeVisible();
+  await expect(page.getByText("acknowledged", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Acknowledge alert" })).toHaveCount(0);
 });

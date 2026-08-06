@@ -217,6 +217,26 @@ paths:
       parameters: [ { $ref: '#/components/parameters/ExperimentID' } ]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExperimentMetrics' } } } }
       responses: { '200': { description: Metrics recorded or automatic rollback applied, content: { application/json: { schema: { $ref: '#/components/schemas/Experiment' } } } } }
+  /api/v1/budget-thresholds:
+    get: { operationId: listBudgetThresholds, responses: { '200': { description: Budget thresholds, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/BudgetThreshold' } } } } } } } } }
+  /api/v1/projects/{projectID}/budget-thresholds:
+    post:
+      operationId: setBudgetThreshold
+      parameters: [ { $ref: '#/components/parameters/ProjectID' } ]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [percentage, severity], properties: { percentage: { type: string }, severity: { type: string, enum: [info, warning, critical] } } } } } }
+      responses: { '201': { description: Threshold configured, content: { application/json: { schema: { $ref: '#/components/schemas/BudgetThreshold' } } } }, '400': { $ref: '#/components/responses/Error' } }
+  /api/v1/budget-alerts:
+    get:
+      operationId: listBudgetAlerts
+      parameters: [ { name: status, in: query, schema: { type: string, enum: [open, acknowledged, resolved] } } ]
+      responses: { '200': { description: Budget alerts, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/BudgetAlert' } } } } } } } }
+  /api/v1/budget-alerts/{alertID}/acknowledge:
+    post:
+      operationId: acknowledgeBudgetAlert
+      parameters: [ { name: alertID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      responses: { '200': { description: Alert acknowledged, content: { application/json: { schema: { $ref: '#/components/schemas/BudgetAlert' } } } }, '409': { $ref: '#/components/responses/Error' } }
+  /api/v1/budget-alerts/evaluate:
+    post: { operationId: evaluateBudgets, responses: { '200': { description: Scheduled evaluation result, content: { application/json: { schema: { type: object, required: [created, suppressed], properties: { created: { type: integer }, suppressed: { type: integer } } } } } } } }
 components:
   securitySchemes:
     cookieSession: { type: apiKey, in: cookie, name: access_token }
@@ -325,4 +345,6 @@ components:
       additionalProperties: true
       required: [id, workload_id, recommendation_id, status, currency, rollback_reason, control_execution, candidate_execution, results, traffic_percentage, guardrails, version, created_at, updated_at]
       properties: { id: { type: string, format: uuid }, workload_id: { type: string, format: uuid }, recommendation_id: { type: string, format: uuid }, status: { type: string, enum: [draft, approved, running, paused, rolled_back, completed, verified] }, currency: { type: string }, rollback_reason: { type: string }, control_execution: { type: object, additionalProperties: true }, candidate_execution: { type: object, additionalProperties: true }, results: { type: object, additionalProperties: true }, traffic_percentage: { type: [string, 'null'] }, verified_savings: { type: [string, 'null'] }, guardrails: { $ref: '#/components/schemas/ExperimentGuardrails' }, started_at: { type: [string, 'null'], format: date-time }, completed_at: { type: [string, 'null'], format: date-time }, version: { type: integer }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+    BudgetThreshold: { type: object, required: [id, project_id, percentage, severity, created_at], properties: { id: { type: string, format: uuid }, project_id: { type: string, format: uuid }, percentage: { type: string }, severity: { type: string }, created_at: { type: string, format: date-time } } }
+    BudgetAlert: { type: object, required: [id, project_id, threshold_type, threshold_value, severity, status, dedupe_key, evidence, triggered_at], properties: { id: { type: string, format: uuid }, project_id: { type: string, format: uuid }, threshold_type: { type: string }, threshold_value: { type: string }, severity: { type: string }, status: { type: string }, dedupe_key: { type: string }, evidence: { type: object, additionalProperties: true }, triggered_at: { type: string, format: date-time }, acknowledged_at: { type: [string, 'null'], format: date-time }, acknowledged_by: { type: [string, 'null'], format: uuid } } }
 security: [ { cookieSession: [] } ]
