@@ -5,6 +5,7 @@ import "testing"
 func TestLoad(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://example")
 	t.Setenv("REDIS_URL", "redis://example")
+	t.Setenv("AUTH_TOKEN_SECRET", "test-only-secret-that-is-at-least-32-characters")
 	t.Setenv("API_ADDRESS", "127.0.0.1:9000")
 
 	cfg, err := Load()
@@ -19,6 +20,7 @@ func TestLoad(t *testing.T) {
 func TestLoadRequiresDependencies(t *testing.T) {
 	t.Setenv("DATABASE_URL", "")
 	t.Setenv("REDIS_URL", "")
+	t.Setenv("AUTH_TOKEN_SECRET", "")
 	if _, err := Load(); err == nil {
 		t.Fatal("Load() error = nil")
 	}

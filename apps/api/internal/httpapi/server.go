@@ -11,11 +11,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/auth"
 )
 
 type Checker interface{ Ping(context.Context) error }
 
-type Dependencies struct{ Database, Redis Checker }
+type Dependencies struct {
+	Database, Redis Checker
+	Auth            *auth.Service
+}
 
 type errorBody struct {
 	Error apiError `json:"error"`
@@ -41,6 +45,7 @@ func NewHandler(logger *slog.Logger, deps Dependencies, registry *prometheus.Reg
 	})
 	router.Get("/health/ready", readiness(deps))
 	router.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+	registerAuthRoutes(router, deps.Auth)
 	return http.MaxBytesHandler(router, 1<<20)
 }
 
