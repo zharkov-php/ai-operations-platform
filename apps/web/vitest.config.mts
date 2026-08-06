@@ -2,4 +2,11 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig({ plugins: [tsconfigPaths(), react()], test: { environment: "jsdom", setupFiles: ["./vitest.setup.ts"] } });
+export default defineConfig({
+  plugins: [tsconfigPaths(), react()],
+  test: {
+    environment: "jsdom",
+    exclude: ["e2e/**", "node_modules/**"],
+    setupFiles: ["./vitest.setup.ts"],
+  },
+});

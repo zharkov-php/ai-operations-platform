@@ -4,11 +4,11 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–8 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. Versioned deterministic rules expose reason codes, evidence, confidence inputs, estimated savings/cost/break-even, quality and operational risk, and required next action. Critical or insufficient-evidence workloads explicitly keep their current model. Recommendations never claim verified savings or apply production changes. Evaluations, experiments, and complete demo data are not implemented yet.
+Phases 0–9 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The indexable public Next.js site now includes product, documentation, comparison, security, policy, and technical article routes with canonical metadata, sitemap, robots policy, structured data, responsive navigation, and browser accessibility checks. Versioned deterministic rules expose reason codes, evidence, confidence inputs, estimated savings/cost/break-even, quality and operational risk, and required next action. Recommendations never claim verified savings or apply production changes. Public calculators, evaluations, experiments, and complete demo data are not implemented yet.
 
 ## Planned product surfaces
 
-- **Public website:** indexable product, documentation, comparison, blog, and educational calculator routes.
+- **Public website:** indexable product, documentation, comparison, and blog routes are implemented; educational calculators are next.
 - **Private platform:** organization-scoped cost analytics, workload evidence, recommendations, evaluations, experiments, budgets, and alerts.
 - **Mobile companion:** concise operational views and authorized actions for alerts, recommendations, and experiments.
 
@@ -29,11 +29,11 @@ The intended monorepo contains a Go API and workers, a Next.js web application, 
 
 ## Development
 
-Install dependencies with `npm ci`, then use `make build`, `make test`, and `make lint`. Development entry points are `make dev-api`, `make dev-web`, and `make dev-mobile`. PostgreSQL and Redis definitions can be validated with `make compose-config`; application connectivity is introduced in Phase 2.
+Install dependencies with `npm ci`, then use `make build`, `make test`, `make lint`, and `make test-e2e`. Development entry points are `make dev-api`, `make dev-web`, and `make dev-mobile`. PostgreSQL and Redis definitions can be validated with `make compose-config`.
 
 ## Limitations
 
-Everything beyond the monorepo foundation is planned. Pricing, model quality, recommendations, savings, authentication, and production integrations are not yet available.
+The current public pricing and model comparison content is illustrative and is not live provider data. Public tools, the private dashboard UI, evaluations, experiments, budgets, notifications, and the complete demo remain planned. No recommendation automatically changes production execution, and no estimated savings are presented as verified.
 
 ## License
 

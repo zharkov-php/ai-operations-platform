@@ -1,4 +1,4 @@
-.PHONY: install dev-api dev-web dev-mobile fmt lint test test-api test-integration test-web test-mobile build build-api build-web build-mobile compose-config
+.PHONY: install dev-api dev-web dev-mobile fmt lint test test-api test-integration test-web test-mobile test-e2e build build-api build-web build-mobile compose-config
 
 install:
 	npm ci
@@ -32,6 +32,9 @@ test-web:
 
 test-mobile:
 	npm run test --workspace mobile
+
+test-e2e:
+	npm run test:e2e --workspace web
 
 build: build-api build-web build-mobile
 
