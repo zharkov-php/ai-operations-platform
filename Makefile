@@ -1,4 +1,4 @@
-.PHONY: install dev-api dev-web dev-mobile fmt lint test test-api test-web test-mobile build build-api build-web build-mobile compose-config
+.PHONY: install dev-api dev-web dev-mobile fmt lint test test-api test-integration test-web test-mobile build build-api build-web build-mobile compose-config
 
 install:
 	npm ci
@@ -23,6 +23,9 @@ test: test-api test-web test-mobile
 
 test-api:
 	cd apps/api && go test ./...
+
+test-integration:
+	cd apps/api && TEST_DATABASE_URL="$${DATABASE_URL}" go test ./internal/portfolio -run Postgres
 
 test-web:
 	npm run test --workspace web

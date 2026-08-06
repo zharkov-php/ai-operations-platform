@@ -15,6 +15,7 @@ import (
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/config"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/dependencies"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/httpapi"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/portfolio"
 )
 
 func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
@@ -31,7 +32,7 @@ func Run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	defer redisClient.Close()
 
 	authService := auth.NewService(auth.NewPostgresStore(pool), []byte(cfg.AuthTokenSecret))
-	server := &http.Server{Addr: cfg.Address, Handler: httpapi.NewHandler(logger, httpapi.Dependencies{Database: dependencies.Postgres{Pool: pool}, Redis: dependencies.Redis{Client: redisClient}, Auth: authService}, prometheus.NewRegistry()), ReadHeaderTimeout: cfg.ReadTimeout, WriteTimeout: cfg.WriteTimeout, IdleTimeout: cfg.IdleTimeout}
+	server := &http.Server{Addr: cfg.Address, Handler: httpapi.NewHandler(logger, httpapi.Dependencies{Database: dependencies.Postgres{Pool: pool}, Redis: dependencies.Redis{Client: redisClient}, Auth: authService, Portfolio: portfolio.NewStore(pool)}, prometheus.NewRegistry()), ReadHeaderTimeout: cfg.ReadTimeout, WriteTimeout: cfg.WriteTimeout, IdleTimeout: cfg.IdleTimeout}
 	errCh := make(chan error, 1)
 	go func() { errCh <- server.ListenAndServe() }()
 	logger.Info("api started", "address", cfg.Address)

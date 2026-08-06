@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/auth"
+	"github.com/zharkov-php/ai-operations-platform/apps/api/internal/portfolio"
 )
 
 type Checker interface{ Ping(context.Context) error }
@@ -19,6 +20,7 @@ type Checker interface{ Ping(context.Context) error }
 type Dependencies struct {
 	Database, Redis Checker
 	Auth            *auth.Service
+	Portfolio       *portfolio.Store
 }
 
 type errorBody struct {
@@ -46,6 +48,7 @@ func NewHandler(logger *slog.Logger, deps Dependencies, registry *prometheus.Reg
 	router.Get("/health/ready", readiness(deps))
 	router.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	registerAuthRoutes(router, deps.Auth)
+	registerPortfolioRoutes(router, deps.Auth, deps.Portfolio)
 	return http.MaxBytesHandler(router, 1<<20)
 }
 
