@@ -1,4 +1,4 @@
-.PHONY: install dev-api dev-web dev-mobile generate-api-client check-api-client fmt lint test test-api test-integration test-web test-mobile test-e2e build build-api build-api-client build-web build-mobile compose-config
+.PHONY: install dev-api dev-web dev-mobile generate-api-client check-api-client fmt lint test test-api test-integration test-web test-mobile test-e2e build build-api build-api-client build-web build-mobile compose-config demo demo-reset
 
 install:
 	npm ci
@@ -58,3 +58,16 @@ build-mobile:
 
 compose-config:
 	docker compose config
+
+demo:
+	docker compose up -d postgres redis
+	cd apps/api && DATABASE_URL='postgres://ai_operations:local-development-only@localhost:5432/ai_operations?sslmode=disable' go run ./cmd/migrate
+	cd apps/api && DATABASE_URL='postgres://ai_operations:local-development-only@localhost:5432/ai_operations?sslmode=disable' SEED_OWNER_PASSWORD='demo-owner-password' go run ./cmd/seed-auth
+	cd apps/api && DATABASE_URL='postgres://ai_operations:local-development-only@localhost:5432/ai_operations?sslmode=disable' go run ./cmd/seed-demo
+	docker compose up -d --build api web
+	@echo 'Login: owner@example.test / demo-owner-password'
+	@echo 'Web: http://localhost:3000'
+	@echo 'API documentation: http://localhost:3000/docs/ingestion-api'
+
+demo-reset:
+	docker compose down --volumes
