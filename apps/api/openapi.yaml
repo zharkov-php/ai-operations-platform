@@ -243,6 +243,14 @@ paths:
       responses: { '200': { description: Alert acknowledged, content: { application/json: { schema: { $ref: '#/components/schemas/BudgetAlert' } } } }, '409': { $ref: '#/components/responses/Error' } }
   /api/v1/budget-alerts/evaluate:
     post: { operationId: evaluateBudgets, responses: { '200': { description: Scheduled evaluation result, content: { application/json: { schema: { type: object, required: [created, suppressed], properties: { created: { type: integer }, suppressed: { type: integer } } } } } } } }
+  /api/v1/notifications:
+    get: { operationId: listNotifications, responses: { '200': { description: In-app notifications, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Notification' } } } } } } } } }
+  /api/v1/notification-preferences:
+    get: { operationId: getNotificationPreferences, responses: { '200': { description: Notification preferences, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } } } }
+    put:
+      operationId: updateNotificationPreferences
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } }
+      responses: { '200': { description: Updated notification preferences, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } } }
 components:
   securitySchemes:
     cookieSession: { type: apiKey, in: cookie, name: access_token }
@@ -354,4 +362,6 @@ components:
       properties: { id: { type: string, format: uuid }, workload_id: { type: string, format: uuid }, recommendation_id: { type: string, format: uuid }, status: { type: string, enum: [draft, approved, running, paused, rolled_back, completed, verified] }, currency: { type: string }, rollback_reason: { type: string }, control_execution: { type: object, additionalProperties: true }, candidate_execution: { type: object, additionalProperties: true }, results: { type: object, additionalProperties: true }, traffic_percentage: { type: [string, 'null'] }, verified_savings: { type: [string, 'null'] }, guardrails: { $ref: '#/components/schemas/ExperimentGuardrails' }, started_at: { type: [string, 'null'], format: date-time }, completed_at: { type: [string, 'null'], format: date-time }, version: { type: integer }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
     BudgetThreshold: { type: object, required: [id, project_id, percentage, severity, created_at], properties: { id: { type: string, format: uuid }, project_id: { type: string, format: uuid }, percentage: { type: string }, severity: { type: string }, created_at: { type: string, format: date-time } } }
     BudgetAlert: { type: object, required: [id, project_id, threshold_type, threshold_value, severity, status, dedupe_key, evidence, triggered_at], properties: { id: { type: string, format: uuid }, project_id: { type: string, format: uuid }, threshold_type: { type: string }, threshold_value: { type: string }, severity: { type: string }, status: { type: string }, dedupe_key: { type: string }, evidence: { type: object, additionalProperties: true }, triggered_at: { type: string, format: date-time }, acknowledged_at: { type: [string, 'null'], format: date-time }, acknowledged_by: { type: [string, 'null'], format: uuid } } }
+    Notification: { type: object, required: [id, event_type, title, body, deep_link, status, attempts, created_at], properties: { id: { type: string, format: uuid }, event_type: { type: string }, title: { type: string }, body: { type: string }, deep_link: { type: string }, status: { type: string }, attempts: { type: integer }, created_at: { type: string, format: date-time } } }
+    NotificationPreferences: { type: object, required: [in_app, mobile_push], properties: { in_app: { type: boolean }, mobile_push: { type: boolean } } }
 security: [ { cookieSession: [] } ]

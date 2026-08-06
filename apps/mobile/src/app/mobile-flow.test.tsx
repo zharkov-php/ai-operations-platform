@@ -1,10 +1,16 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
 import { OverviewView } from "./(app)/index";
 import { AlertCard } from "./(app)/alerts";
 import { RecommendationActions } from "./(app)/recommendations/[id]";
 import { ExperimentActions } from "./(app)/experiments/[id]";
 import { State } from "../components/ui";
 import SignIn from "./sign-in";
+import { NotificationList } from "./(app)/notifications";
 
 const mockSignIn = jest.fn();
 jest.mock("../lib/auth", () => ({
@@ -95,5 +101,21 @@ describe("mobile operational journey", () => {
   it("renders an offline-safe error state", () => {
     render(<State error={new Error("offline")} loading={false} />);
     expect(screen.getByText(/Check your connection/)).toBeTruthy();
+  });
+  it("shows a safe in-app notification summary", () => {
+    render(
+      <NotificationList
+        items={[
+          {
+            id: "one",
+            title: "Experiment rolled back",
+            body: "A guardrail was exceeded.",
+            status: "delivered",
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Experiment rolled back")).toBeTruthy();
+    expect(screen.queryByText(/Bearer/)).toBeNull();
   });
 });

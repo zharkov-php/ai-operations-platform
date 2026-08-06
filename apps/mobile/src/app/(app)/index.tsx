@@ -20,6 +20,7 @@ export function OverviewView({ data }: { data: any }) {
       <NavLink href="/(app)/experiments">Active experiments</NavLink>
       <NavLink href="/(app)/projects">Projects</NavLink>
       <NavLink href="/(app)/settings">Settings</NavLink>
+      <NavLink href="/(app)/notifications">Notifications</NavLink>
     </>
   );
 }

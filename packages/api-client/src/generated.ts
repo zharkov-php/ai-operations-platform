@@ -628,6 +628,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getNotificationPreferences"];
+        put: operations["updateNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1060,6 +1092,22 @@ export interface components {
             acknowledged_at?: string | null;
             /** Format: uuid */
             acknowledged_by?: string | null;
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            event_type: string;
+            title: string;
+            body: string;
+            deep_link: string;
+            status: string;
+            attempts: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        NotificationPreferences: {
+            in_app: boolean;
+            mobile_push: boolean;
         };
     };
     responses: {
@@ -2105,6 +2153,72 @@ export interface operations {
                         created: number;
                         suppressed: number;
                     };
+                };
+            };
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description In-app notifications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Notification"][];
+                    };
+                };
+            };
+        };
+    };
+    getNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notification preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferences"];
+                };
+            };
+        };
+    };
+    updateNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPreferences"];
+            };
+        };
+        responses: {
+            /** @description Updated notification preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferences"];
                 };
             };
         };
