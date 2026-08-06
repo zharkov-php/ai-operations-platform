@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -628,8 +644,16 @@ export interface components {
             email: string;
             /** Format: password */
             password: string;
+            /** @enum {string} */
+            client?: "mobile";
+        };
+        RefreshRequest: {
+            refresh_token?: string;
         };
         Session: {
+            access_token?: string;
+            refresh_token?: string;
+            token_type?: string;
             /** Format: date-time */
             expires_at: string;
         };
@@ -1096,7 +1120,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
         responses: {
             /** @description Session ended */
             204: {
@@ -1105,6 +1133,31 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Rotated mobile session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     getCurrentUser: {

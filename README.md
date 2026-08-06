@@ -4,7 +4,7 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phases 0–16 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The private platform supports audited review, sanitized evaluations, local-model economics, guarded experiments, and project budget governance. Scheduled budget evaluation creates deduplicated percentage, projected-overspend, and deterministic anomaly alerts with tenant-scoped acknowledgement.
+Phases 0–17 are implemented: the platform securely ingests, prices, analyzes, classifies, and recommends execution changes for organization-scoped LLM workloads. The private platform supports audited review, sanitized evaluations, local-model economics, guarded experiments, and project budget governance. The Expo companion provides secure mobile authentication, operational summaries, alerts, recommendation review, experiment controls, and explicit permission and offline states.
 
 ## Planned product surfaces
 

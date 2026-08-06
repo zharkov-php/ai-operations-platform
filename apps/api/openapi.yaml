@@ -17,7 +17,13 @@ paths:
   /api/v1/auth/logout:
     post:
       operationId: logout
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/RefreshRequest' } } } }
       responses: { '204': { description: Session ended } }
+  /api/v1/auth/refresh:
+    post:
+      operationId: refresh
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RefreshRequest' } } } }
+      responses: { '200': { description: Rotated mobile session, content: { application/json: { schema: { $ref: '#/components/schemas/Session' } } } }, '401': { $ref: '#/components/responses/Error' } }
   /api/v1/me:
     get:
       operationId: getCurrentUser
@@ -258,8 +264,9 @@ components:
     LoginRequest:
       type: object
       required: [email, password]
-      properties: { email: { type: string, format: email }, password: { type: string, format: password } }
-    Session: { type: object, required: [expires_at], properties: { expires_at: { type: string, format: date-time } } }
+      properties: { email: { type: string, format: email }, password: { type: string, format: password }, client: { type: string, enum: [mobile] } }
+    RefreshRequest: { type: object, properties: { refresh_token: { type: string } } }
+    Session: { type: object, required: [expires_at], properties: { access_token: { type: string }, refresh_token: { type: string }, token_type: { type: string }, expires_at: { type: string, format: date-time } } }
     CurrentUser: { type: object, required: [id, organization_id, role], properties: { id: { type: string, format: uuid }, organization_id: { type: string, format: uuid }, role: { type: string, enum: [owner, admin, engineer, finance, viewer] } } }
     Project:
       type: object
