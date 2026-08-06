@@ -1,4 +1,4 @@
-.PHONY: install dev-api dev-web dev-mobile fmt lint test test-api test-integration test-web test-mobile test-e2e build build-api build-web build-mobile compose-config
+.PHONY: install dev-api dev-web dev-mobile generate-api-client check-api-client fmt lint test test-api test-integration test-web test-mobile test-e2e build build-api build-api-client build-web build-mobile compose-config
 
 install:
 	npm ci
@@ -11,6 +11,12 @@ dev-web:
 
 dev-mobile:
 	npm run start --workspace mobile
+
+generate-api-client:
+	npm run generate --workspace @ai-operations/api-client
+
+check-api-client: generate-api-client
+	git diff --exit-code -- packages/api-client/src/generated.ts
 
 fmt:
 	cd apps/api && gofmt -w $$(find . -name '*.go')
@@ -36,10 +42,13 @@ test-mobile:
 test-e2e:
 	npm run test:e2e --workspace web
 
-build: build-api build-web build-mobile
+build: build-api build-api-client build-web build-mobile
 
 build-api:
 	cd apps/api && go build ./...
+
+build-api-client:
+	npm run typecheck --workspace @ai-operations/api-client
 
 build-web:
 	npm run build --workspace web

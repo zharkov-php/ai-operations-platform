@@ -1,0 +1,155 @@
+openapi: 3.1.0
+info:
+  title: AI Operations Platform API
+  version: 0.1.0
+  description: Organization-scoped API contract for currently implemented platform capabilities.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } } }
+      responses:
+        '200': { description: Session created, content: { application/json: { schema: { $ref: '#/components/schemas/Session' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      responses: { '204': { description: Session ended } }
+  /api/v1/me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        '200': { description: Current principal, content: { application/json: { schema: { $ref: '#/components/schemas/CurrentUser' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/v1/projects:
+    get:
+      operationId: listProjects
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Offset' }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: environment, in: query, schema: { type: string } }
+      responses: { '200': { description: Project page, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectPage' } } } } }
+  /api/v1/projects/{projectID}:
+    get:
+      operationId: getProject
+      parameters: [ { $ref: '#/components/parameters/ProjectID' } ]
+      responses:
+        '200': { description: Project, content: { application/json: { schema: { $ref: '#/components/schemas/Project' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/workloads:
+    get:
+      operationId: listWorkloads
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Offset' }
+        - { name: project_id, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string } }
+      responses: { '200': { description: Workload page, content: { application/json: { schema: { $ref: '#/components/schemas/WorkloadPage' } } } } }
+  /api/v1/workloads/{workloadID}:
+    get:
+      operationId: getWorkload
+      parameters: [ { name: workloadID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      responses:
+        '200': { description: Workload, content: { application/json: { schema: { $ref: '#/components/schemas/Workload' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/llm-calls:
+    get:
+      operationId: listLLMCalls
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Offset' }
+        - { name: project_id, in: query, schema: { type: string, format: uuid } }
+        - { name: workload_id, in: query, schema: { type: string, format: uuid } }
+      responses: { '200': { description: Call page, content: { application/json: { schema: { $ref: '#/components/schemas/CallPage' } } } } }
+  /api/v1/analytics/overview:
+    get:
+      operationId: getAnalyticsOverview
+      parameters: [ { $ref: '#/components/parameters/From' }, { $ref: '#/components/parameters/To' }, { $ref: '#/components/parameters/Timezone' }, { name: project_id, in: query, schema: { type: string, format: uuid } }, { name: workload_id, in: query, schema: { type: string, format: uuid } } ]
+      responses: { '200': { description: Overview, content: { application/json: { schema: { $ref: '#/components/schemas/AnalyticsOverview' } } } } }
+  /api/v1/analytics/costs:
+    get:
+      operationId: getAnalyticsCosts
+      parameters: [ { name: dimension, in: query, schema: { type: string, enum: [project, workload, provider, model, task] } }, { $ref: '#/components/parameters/From' }, { $ref: '#/components/parameters/To' }, { $ref: '#/components/parameters/Timezone' }, { name: project_id, in: query, schema: { type: string, format: uuid } }, { name: workload_id, in: query, schema: { type: string, format: uuid } } ]
+      responses: { '200': { description: Cost analytics, content: { application/json: { schema: { $ref: '#/components/schemas/CostAnalytics' } } } } }
+  /api/v1/analytics/tokens:
+    get:
+      operationId: getAnalyticsTokens
+      responses: { '200': { description: Token analytics, content: { application/json: { schema: { $ref: '#/components/schemas/TokenSummary' } } } } }
+  /api/v1/analytics/latency:
+    get:
+      operationId: getAnalyticsLatency
+      responses: { '200': { description: Latency analytics, content: { application/json: { schema: { $ref: '#/components/schemas/LatencySummary' } } } } }
+  /api/v1/analytics/errors:
+    get:
+      operationId: getAnalyticsErrors
+      responses: { '200': { description: Error analytics, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorSummary' } } } } }
+  /api/v1/recommendations:
+    get:
+      operationId: listRecommendations
+      parameters: [ { name: status, in: query, schema: { type: string } }, { name: priority, in: query, schema: { type: string } } ]
+      responses: { '200': { description: Recommendations, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Recommendation' } } } } } } } }
+  /api/v1/recommendations/{recommendationID}:
+    get:
+      operationId: getRecommendation
+      parameters: [ { name: recommendationID, in: path, required: true, schema: { type: string, format: uuid } } ]
+      responses:
+        '200': { description: Recommendation, content: { application/json: { schema: { $ref: '#/components/schemas/Recommendation' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    cookieSession: { type: apiKey, in: cookie, name: access_token }
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+    Offset: { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+    From: { name: from, in: query, schema: { type: string, format: date } }
+    To: { name: to, in: query, schema: { type: string, format: date } }
+    Timezone: { name: timezone, in: query, schema: { type: string } }
+    ProjectID: { name: projectID, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    Error: { description: API error, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties: { error: { type: object, required: [code, message, request_id], properties: { code: { type: string }, message: { type: string }, request_id: { type: string } } } }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties: { email: { type: string, format: email }, password: { type: string, format: password } }
+    Session: { type: object, required: [expires_at], properties: { expires_at: { type: string, format: date-time } } }
+    CurrentUser: { type: object, required: [id, organization_id, role], properties: { id: { type: string, format: uuid }, organization_id: { type: string, format: uuid }, role: { type: string, enum: [owner, admin, engineer, finance, viewer] } } }
+    Project:
+      type: object
+      required: [id, organization_id, name, slug, environment, monthly_budget, currency, status, created_at, updated_at]
+      properties: { id: { type: string, format: uuid }, organization_id: { type: string, format: uuid }, name: { type: string }, slug: { type: string }, environment: { type: string }, monthly_budget: { type: string }, currency: { type: string }, status: { type: string }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+    Workload:
+      type: object
+      required: [id, project_id, name, slug, type, owner, criticality, quality_requirement, privacy_classification, status, created_at, updated_at]
+      properties: { id: { type: string, format: uuid }, project_id: { type: string, format: uuid }, name: { type: string }, slug: { type: string }, type: { type: string }, owner: { type: string }, criticality: { type: string }, quality_requirement: { type: string }, privacy_classification: { type: string }, status: { type: string }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+    LLMCall:
+      type: object
+      required: [id, organization_id, project_id, workload_id, external_call_id, provider, model, estimated_cost, currency, created_at, idempotent_replay]
+      properties: { id: { type: string, format: uuid }, organization_id: { type: string, format: uuid }, project_id: { type: string, format: uuid }, workload_id: { type: string, format: uuid }, external_call_id: { type: string }, provider: { type: string }, model: { type: string }, estimated_cost: { type: string }, currency: { type: string }, redacted_prompt_preview: { type: string }, redacted_response_preview: { type: string }, created_at: { type: string, format: date-time }, idempotent_replay: { type: boolean } }
+    ProjectPage: { type: object, required: [items, limit, offset], properties: { items: { type: array, items: { $ref: '#/components/schemas/Project' } }, limit: { type: integer }, offset: { type: integer } } }
+    WorkloadPage: { type: object, required: [items, limit, offset], properties: { items: { type: array, items: { $ref: '#/components/schemas/Workload' } }, limit: { type: integer }, offset: { type: integer } } }
+    CallPage: { type: object, required: [items, limit, offset], properties: { items: { type: array, items: { $ref: '#/components/schemas/LLMCall' } }, limit: { type: integer }, offset: { type: integer } } }
+    AnalyticsOverview:
+      type: object
+      required: [observed_cost, previous_period_cost, estimated_monthly_projection, currency, call_count, input_tokens, output_tokens, cached_input_tokens, average_latency_ms, error_rate, retry_rate, projection_method]
+      properties: { observed_cost: { type: string }, previous_period_cost: { type: string }, estimated_monthly_projection: { type: string }, currency: { type: string }, call_count: { type: integer }, input_tokens: { type: integer }, output_tokens: { type: integer }, cached_input_tokens: { type: integer }, average_latency_ms: { type: string }, error_rate: { type: string }, retry_rate: { type: string }, projection_method: { type: string } }
+    CostPoint: { type: object, required: [key, cost, calls, currency], properties: { key: { type: string }, cost: { type: string }, calls: { type: integer }, currency: { type: string } } }
+    DailyPoint: { type: object, required: [date, cost, calls], properties: { date: { type: string, format: date }, cost: { type: string }, calls: { type: integer } } }
+    CostAnalytics: { type: object, required: [dimension, breakdown, daily, currency], properties: { dimension: { type: string }, breakdown: { type: array, items: { $ref: '#/components/schemas/CostPoint' } }, daily: { type: array, items: { $ref: '#/components/schemas/DailyPoint' } }, currency: { type: string } } }
+    TokenSummary: { type: object, required: [input, output, cached_input], properties: { input: { type: integer }, output: { type: integer }, cached_input: { type: integer } } }
+    LatencySummary: { type: object, required: [average_ms, p50_ms, p95_ms], properties: { average_ms: { type: string }, p50_ms: { type: string }, p95_ms: { type: string } } }
+    ErrorSummary: { type: object, required: [calls, errors, retried_calls, error_rate, retry_rate], properties: { calls: { type: integer }, errors: { type: integer }, retried_calls: { type: integer }, error_rate: { type: string }, retry_rate: { type: string } } }
+    Recommendation:
+      type: object
+      additionalProperties: true
+      required: [id, workload_id, recommendation_type, priority, confidence_level, status, currency, quality_risk, operational_risk, required_next_action, rule_version, confidence, estimated_monthly_savings, estimated_implementation_cost, reason_codes, evidence_summary, confidence_inputs, current_execution, proposed_execution, created_at, updated_at]
+      properties: { id: { type: string, format: uuid }, workload_id: { type: string, format: uuid }, recommendation_type: { type: string }, priority: { type: string }, confidence_level: { type: string }, status: { type: string }, currency: { type: string }, quality_risk: { type: string }, operational_risk: { type: string }, required_next_action: { type: string }, rule_version: { type: string }, confidence: { type: string }, estimated_monthly_savings: { type: string }, estimated_implementation_cost: { type: string }, estimated_break_even_months: { type: [string, 'null'] }, reason_codes: { type: array, items: { type: string } }, evidence_summary: { type: object, additionalProperties: true }, confidence_inputs: { type: object, additionalProperties: true }, current_execution: { type: object, additionalProperties: true }, proposed_execution: { type: object, additionalProperties: true }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+security: [ { cookieSession: [] } ]

@@ -56,10 +56,11 @@ test("robots allows public pages and protects private routes", async ({ request 
   expect(body).toContain("Sitemap: http://localhost:3000/sitemap.xml");
 });
 
-test("dashboard is excluded from indexing", async ({ page }) => {
+test("unauthenticated dashboard redirects to a noindex sign-in page", async ({ page }) => {
   await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/sign-in\?next=%2Fdashboard/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard foundation");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Sign in");
 });
 
 test("cost calculator updates exact estimates and shareable URL state", async ({ page }) => {
