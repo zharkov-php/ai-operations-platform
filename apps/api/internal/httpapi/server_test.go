@@ -1,0 +1,64 @@
+package httpapi
+
+import (
+	"context"
+	"errors"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+type checkFunc func(context.Context) error
+
+func (f checkFunc) Ping(ctx context.Context) error { return f(ctx) }
+
+func handler(dbErr, redisErr error) http.Handler {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	return NewHandler(logger, Dependencies{
+		Database: checkFunc(func(context.Context) error { return dbErr }),
+		Redis:    checkFunc(func(context.Context) error { return redisErr }),
+	}, prometheus.NewRegistry())
+}
+
+func TestHealthEndpoints(t *testing.T) {
+	for _, test := range []struct {
+		path string
+		want int
+	}{{"/health/live", 200}, {"/health/ready", 200}, {"/missing", 404}} {
+		t.Run(test.path, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			handler(nil, nil).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, test.path, nil))
+			if recorder.Code != test.want {
+				t.Fatalf("status = %d, want %d", recorder.Code, test.want)
+			}
+			if recorder.Header().Get("Content-Type") != "application/json" {
+				t.Fatalf("content type = %q", recorder.Header().Get("Content-Type"))
+			}
+		})
+	}
+}
+
+func TestReadinessFailsSafely(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	handler(errors.New("database password must not leak"), nil).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/health/ready", nil))
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d", recorder.Code)
+	}
+	if strings.Contains(recorder.Body.String(), "password") {
+		t.Fatal("response leaked dependency error")
+	}
+}
+
+func TestErrorEnvelopeIncludesRequestID(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	handler(nil, nil).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/missing", nil))
+	body := recorder.Body.String()
+	if !strings.Contains(body, `"code":"not_found"`) || !strings.Contains(body, `"request_id":"`) {
+		t.Fatalf("unexpected error envelope: %s", body)
+	}
+}

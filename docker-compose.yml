@@ -1,6 +1,24 @@
 name: ai-operations-platform
 
 services:
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      API_ADDRESS: :8080
+      DATABASE_URL: postgres://ai_operations:local-development-only@postgres:5432/ai_operations?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/api", "healthcheck"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    ports: ["8080:8080"]
   postgres:
     image: postgres:17-alpine
     environment:

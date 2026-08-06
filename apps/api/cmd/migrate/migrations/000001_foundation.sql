@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS schema_foundation (
+    version TEXT PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO schema_foundation (version) VALUES ('000001') ON CONFLICT DO NOTHING;
