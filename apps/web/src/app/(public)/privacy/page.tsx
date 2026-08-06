@@ -1,5 +1,51 @@
 import { PageIntro } from "@/components/public-shell";
 import { pageMetadata } from "@/lib/site";
 
-export const metadata = pageMetadata("Privacy", "Privacy principles and current data-handling status for AI Execution Advisor.", "/privacy");
-export default function PrivacyPage() { return <article className="section article legal"><PageIntro eyebrow="Privacy" title="Privacy model" description="Effective August 6, 2026. This page documents the project’s intended self-hosted data boundaries; it is not a hosted-service privacy notice." /><section><h2>Self-hosted operation</h2><p>The project does not currently operate a commercial hosted service. A repository operator controls its deployment, database, telemetry configuration, retention, and provider relationships.</p></section><section><h2>Execution metadata</h2><p>The application is designed to store operational metadata, hashes, and redacted previews. Raw prompt and response storage is disabled by default. Operators remain responsible for configuring sensitive field names and lawful retention.</p></section><section><h2>Public tools</h2><p>The prompt cost estimator planned for a later phase will process pasted text locally by default. This phase does not collect pasted prompt content.</p></section><section><h2>Contact and changes</h2><p>Project governance and a formal contact channel will be documented before a hosted service is offered. Material policy changes should be reviewed alongside the source release that introduced them.</p></section></article>; }
+export const metadata = pageMetadata(
+  "Privacy",
+  "Privacy principles and current data-handling status for AI Execution Advisor.",
+  "/privacy",
+);
+export default function PrivacyPage() {
+  return (
+    <article className="section article legal">
+      <PageIntro
+        eyebrow="Privacy"
+        title="Privacy model"
+        description="Effective August 6, 2026. This page documents the project’s intended self-hosted data boundaries; it is not a hosted-service privacy notice."
+      />
+      <section>
+        <h2>Self-hosted operation</h2>
+        <p>
+          The project does not currently operate a commercial hosted service. A
+          repository operator controls its deployment, database, telemetry
+          configuration, retention, and provider relationships.
+        </p>
+      </section>
+      <section>
+        <h2>Execution metadata</h2>
+        <p>
+          The application is designed to store operational metadata, hashes, and
+          redacted previews. Raw prompt and response storage is disabled by
+          default. Operators remain responsible for configuring sensitive field
+          names and lawful retention.
+        </p>
+      </section>
+      <section>
+        <h2>Public tools</h2>
+        <p>
+          The prompt cost estimator processes pasted text locally in the browser
+          and does not transmit it to the API.
+        </p>
+      </section>
+      <section>
+        <h2>Contact and changes</h2>
+        <p>
+          Project governance and a formal contact channel will be documented
+          before a hosted service is offered. Material policy changes should be
+          reviewed alongside the source release that introduced them.
+        </p>
+      </section>
+    </article>
+  );
+}

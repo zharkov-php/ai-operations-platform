@@ -6,7 +6,7 @@ Public pages are unauthenticated and cannot access tenant data. Browser sessions
 
 ## Credential handling
 
-Passwords use a modern adaptive hash. API keys and refresh tokens are stored only as hashes; an identifying prefix is retained and the full secret is shown once. Revocation, rotation, last-used timestamps, authentication rate limits, and account lockout are planned. Authorization headers, cookies, passwords, API keys, bearer tokens, and private-key markers are removed from logs and persisted previews.
+Passwords use a modern adaptive hash. API keys and refresh tokens are stored only as hashes; an identifying prefix is retained and the full secret is shown once. Revocation, rotation, last-used timestamps, authentication rate limits, and account lockout are implemented. Authorization headers, cookies, passwords, API keys, bearer tokens, and private-key markers are removed from logs and persisted previews.
 
 ## Data minimization
 

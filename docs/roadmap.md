@@ -35,4 +35,4 @@ The project proceeds through independently validated and committed phases. A pha
 22. Documentation and portfolio audit.
 23. v0.1.0 release preparation, annotated tag, and verified remote push.
 
-Detailed acceptance criteria are maintained in the product implementation prompt and will be reflected in phase reports as work proceeds. The roadmap does not imply that phases after Phase 0 are implemented.
+Detailed acceptance criteria are reflected in the implementation, tests, documentation, and logical phase commits. Post-0.1 work should be driven by measured operational needs rather than the original phase numbering.

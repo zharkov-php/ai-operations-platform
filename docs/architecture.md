@@ -30,7 +30,7 @@ flowchart LR
 - `packages/design-tokens`: shared tokens only when both clients consume them.
 - `deployments/docker`: container definitions when introduced.
 
-No runtime directories exist in Phase 0. They will be created only when their phase supplies a concrete implementation.
+Runtime directories exist only for implemented responsibilities; the repository avoids speculative services and packages.
 
 ## Request and data flow
 
