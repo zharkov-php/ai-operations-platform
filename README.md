@@ -4,7 +4,7 @@ AI Operations Platform is an open-source portfolio project for observing AI work
 
 ## Current status
 
-Phase 0 is implemented: product requirements, architecture, domain, security, testing, and roadmap documentation are defined. No runtime application, API, dashboard, mobile app, ingestion pipeline, recommendation engine, or demo is implemented yet.
+Phases 0 and 1 are implemented: the architecture documentation and a buildable Go, Next.js, and Expo monorepo foundation exist. The web and mobile surfaces contain explicit foundation screens only. Authentication, ingestion, analytics, recommendations, and demo data are not implemented yet.
 
 ## Planned product surfaces
 
@@ -29,11 +29,11 @@ The intended monorepo contains a Go API and workers, a Next.js web application, 
 
 ## Development
 
-Runtime setup commands will be added in Phase 1. The repository currently has no buildable application and no demo credentials.
+Install dependencies with `npm ci`, then use `make build`, `make test`, and `make lint`. Development entry points are `make dev-api`, `make dev-web`, and `make dev-mobile`. PostgreSQL and Redis definitions can be validated with `make compose-config`; application connectivity is introduced in Phase 2.
 
 ## Limitations
 
-Everything beyond the Phase 0 documentation is planned. Pricing, model quality, recommendations, savings, authentication, and production integrations are not yet available.
+Everything beyond the monorepo foundation is planned. Pricing, model quality, recommendations, savings, authentication, and production integrations are not yet available.
 
 ## License
 

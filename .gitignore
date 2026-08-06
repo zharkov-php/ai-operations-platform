@@ -11,6 +11,7 @@ coverage/
 .expo/
 web-build/
 bin/
+/apps/api/api
 tmp/
 *.log
 *.test
