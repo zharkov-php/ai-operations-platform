@@ -27,7 +27,7 @@ jobs:
       DATABASE_URL: postgres://ai_operations:integration-only@localhost:5432/ai_operations?sslmode=disable
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           {
             go-version-file: apps/api/go.mod,
@@ -84,7 +84,7 @@ jobs:
         with: { node-version: 24, cache: npm }
       - run: npm ci
       - run: npm audit --audit-level=high
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with: { go-version-file: apps/api/go.mod }
       - run: cd apps/api && go list -m -json all >/dev/null
       - run: cd apps/api && go run github.com/google/go-licenses@v1.6.0 check ./...
