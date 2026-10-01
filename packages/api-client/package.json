@@ -8,6 +8,6 @@
     "generate": "openapi-typescript ../../apps/api/openapi.yaml -o src/generated.ts",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": { "openapi-fetch": "^0.14.0" },
-  "devDependencies": { "openapi-typescript": "^7.9.1", "typescript": "^5" }
+  "dependencies": { "openapi-fetch": "^0.17.0" },
+  "devDependencies": { "openapi-typescript": "^7.9.1", "typescript": "^7" }
 }
